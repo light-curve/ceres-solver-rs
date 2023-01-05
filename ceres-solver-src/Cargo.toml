@@ -1,0 +1,12 @@
+[package]
+name = "ceres-solver-src"
+version = "0.1.0+ceres2.1.0-eigen3.4.0"
+edition = "2021"
+links = "ceres"
+readme = "README.md"
+description = "Rust distribution of Ceres Solver built as a minimal static library"
+repository = "https://github.com/light-curve/ceres-solver-rs"
+license = "MIT OR Apache-2.0"
+
+[build-dependencies]
+cmake = "0.1"

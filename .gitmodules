@@ -1,0 +1,6 @@
+[submodule "ceres-solver"]
+	path = ceres-solver-src/vendor/ceres-solver
+	url = https://ceres-solver.googlesource.com/ceres-solver
+[submodule "contrib/eigen"]
+	path = ceres-solver-src/vendor/eigen
+	url = https://gitlab.com/libeigen/eigen.git

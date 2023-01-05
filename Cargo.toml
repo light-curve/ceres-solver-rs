@@ -1,0 +1,24 @@
+[package]
+name = "ceres-solver"
+version = "0.1.0"
+edition = "2021"
+readme = "README.md"
+description = "Safe Rust bindings for the Ceres Solver"
+repository = "https://github.com/light-curve/ceres-solver-rs"
+license = "MIT OR Apache-2.0"
+
+[workspace]
+members = [
+    "ceres-solver-src",
+    "ceres-solver-sys",
+]
+
+[dependencies.ceres-solver-sys]
+version = "0.1.0"
+path = "./ceres-solver-sys"
+
+[dev-dependencies]
+approx = "0.5"
+
+[package.metadata.docs.rs]
+features = ["ceres-solver-sys/source"]
