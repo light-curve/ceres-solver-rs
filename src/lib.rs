@@ -1,5 +1,5 @@
 //! # ceres-solver-rs
-//! ## Safe Rust bindings to [Google's Ceres Solver](http://ceres-solver.org)
+//! ## Safe Rust bindings for [Ceres Solver](http://ceres-solver.org)
 //!
 //! Solve large and small non-linear optimization problems in Rust.
 //! See [nlls_problem::NllsProblem] for general non-linear least squares problem and
@@ -7,7 +7,7 @@
 //!
 //! # Examples
 //!
-//! Let's solve (x - 2) = 0 problem
+//! Let's solve min[(x - 2)^2] problem
 //!
 //! ```rust
 //! use ceres_solver::{CostFunction, CostFunctionType, NllsProblem, ResidualBlock};

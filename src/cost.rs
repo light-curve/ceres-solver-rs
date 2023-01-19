@@ -28,14 +28,14 @@ impl<'a> CostFunction<'a> {
     ///   `parameter_sizes`.
     ///   - residuals - mutable slice of [f64] for residuals outputs, the size is specified by
     ///   `num_residuals`.
-    ///   - jacobians - has a complex type [JacobianType](crate::types::JacobianType) and represents
-    ///   a mutable structure to output the Jacobian. Sometimes solver doesn't need the Jacobian or
+    ///   - jacobians: [JacobianType](crate::types::JacobianType) - represents a mutable
+    ///   structure to output the Jacobian. Sometimes the solver doesn't need the Jacobian or
     ///   some of its components, in this case the corresponding value is [None]. For the required
-    ///   components it has a 3-D structure: top index is for parameter, middle index is for
-    ///   the residual index, and the most inner dimension is for parameter component index. So the
-    ///   size of top-level [Some] is defined by `parameter_sizes.len()`, second-level [Some]'s
-    ///   length is `num_residuals`, and the bottom-level slice has length of `parameter_sizes[i]`,
-    ///    where `i` is the top-level index.
+    ///   components it has a 3-D shape: top index is for the parameter index, middle index is for
+    ///   the residual index, and the most inner dimension is for the given parameter component
+    ///   index. So the size of top-level [Some] is defined by `parameter_sizes.len()`, second-level
+    ///   [Some]'s slice length is `num_residuals`, and the bottom-level slice has length of
+    ///   `parameter_sizes[i]`, where `i` is the top-level index.
     /// - parameter_sizes - sizes of the parameter vectors.
     /// - num_residuals - length of the residual vector, usually corresponds to the number of
     /// data points.

@@ -8,8 +8,8 @@ use std::os::raw::c_int;
 ///
 /// You use it in three steps:
 /// - [NllsProblem::new] creates a new empty instance of the problem.
-/// - [NllsProblem::add_residual_block] adds a new [ResidualBlock], each with its own parameters,
-/// cost and loss function.
+/// - [NllsProblem::add_residual_block] adds a [ResidualBlock], each with its own parameters,
+/// cost and loss functions.
 /// - [NllsProblem::solve] solves the problem and returns a vector consists of parameters for each
 /// residual block.
 ///
@@ -121,7 +121,7 @@ impl<'cost> NllsProblem<'cost> {
         &self.status
     }
 
-    /// Returns the number of residual blocks for unsolved problem, zero otherwise.
+    /// Returns the number of residual blocks for an unsolved problem, zero otherwise.
     pub fn num_blocks(&self) -> usize {
         match &self.status {
             ProblemStatus::Uninitialized => 0,

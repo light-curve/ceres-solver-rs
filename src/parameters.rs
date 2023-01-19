@@ -13,7 +13,7 @@ pub struct Parameters {
 #[allow(clippy::len_without_is_empty)]
 impl Parameters {
     /// Creates a new `Parameters` from a vector of parameters, keeping in mind that each parameter
-    /// is a [f64] vector itself
+    /// is a [f64] vector itself.
     pub fn new(values: impl Into<Vec<Vec<f64>>>) -> Self {
         let mut values = values.into();
         assert!(!values.is_empty());

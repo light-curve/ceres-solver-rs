@@ -6,7 +6,7 @@ use crate::residual_block::ResidualBlock;
 pub type CurveFunctionType = Box<dyn Fn(f64, &[f64], &mut f64, Option<&mut [Option<f64>]>) -> bool>;
 
 /// A wrapper for [NllsProblem] providing easier interface to solve an 1-D muliparameter curve fit
-/// problem. You can use it in two steps: create a new instance with [CurveFitProblem1D::new] and
+/// problem. Use it in two steps: create a new instance with [CurveFitProblem1D::new] and then
 /// call a destructive method [CurveFitProblem1D::to_solution] to get a solution.
 pub struct CurveFitProblem1D<'cost>(NllsProblem<'cost>);
 
@@ -18,10 +18,10 @@ impl<'cost> CurveFitProblem1D<'cost> {
     /// Jacobian, or [true] otherwise. It accepts the following parameters:
     ///   - x - an independent coordinate.
     ///   - parameters - a slice for the current value of the problem parameters. Note, that unlike
-    ///   [NllsProblem] the parameters a 1-D slice.
+    ///   [NllsProblem] it is a 1-D slice.
     ///   - y - a mutable reference to output the function value.
     ///   - jacobians - an output Jacobian matrix, it (or any of its component) can be [None], which
-    ///   means that the solver doesn't need it. Otherwise it is a 2-D structure, the top index
+    ///   means that the solver doesn't need it. Otherwise it has a 2-D shape, the top index
     ///   corresponds to a parameter component, the bottom index corresponds to a data point. So the
     ///   top-level slice inside [Some] has length of `parameters.len()`, while inner slices have
     ///   the same length as `x` and `y`.
@@ -32,7 +32,7 @@ impl<'cost> CurveFitProblem1D<'cost> {
     /// - loss - optional loss function.
     ///
     /// # Panics
-    /// Panics if `x` and `y` have different size.
+    /// Panics if `x` and `y` have different sizes.
     pub fn new(
         func: impl Into<CurveFunctionType>,
         x: &'cost [f64],

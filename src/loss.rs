@@ -77,7 +77,7 @@ impl LossFunction {
         Self::Stock(stock)
     }
 
-    /// Calls underlying loss function.
+    /// Calls the underlying loss function.
     #[inline]
     pub fn loss(&self, squared_norm: f64, out: &mut [f64; 3]) {
         match self {

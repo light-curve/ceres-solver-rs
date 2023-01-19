@@ -15,7 +15,7 @@ pub struct ResidualBlock<'cost> {
 }
 
 impl<'cost> ResidualBlock<'cost> {
-    /// Creates a new instance of [ResidualBlock].
+    /// Creates a new instance of [ResidualBlock] having a trivial loss function.
     ///
     /// # Arguments
     /// - parameters - A vector of initial parameters, each parameter is a vector of [f64] values
