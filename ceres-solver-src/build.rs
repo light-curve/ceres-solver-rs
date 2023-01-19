@@ -1,4 +1,7 @@
 use std::env;
+use std::ffi::OsString;
+#[cfg(target_os = "windows")]
+use std::os::windows::ffi::{OsStrExt, OsStringExt};
 use std::path::PathBuf;
 
 fn main() {
@@ -18,7 +21,32 @@ fn main() {
     let eigen_cmake_dir = {
         let mut dir = eigen_dir.clone();
         dir.push("cmake");
-        dir
+        #[allow(unused_mut)]
+        let mut os_str: OsString = dir.into();
+        // Cmake would like to have all paths to be separated by "/" on all platforms.
+        #[cfg(target_os = "windows")]
+        {
+            let forward_slash = AsRef::<std::ffi::OsStr>::as_ref("/")
+                .encode_wide()
+                .next()
+                .unwrap();
+            let backward_slash = AsRef::<std::ffi::OsStr>::as_ref(r#"\"#)
+                .encode_wide()
+                .next()
+                .unwrap();
+            let v: Vec<_> = os_str
+                .encode_wide()
+                .map(|char| {
+                    if char == backward_slash {
+                        forward_slash
+                    } else {
+                        char
+                    }
+                })
+                .collect();
+            os_str = OsString::from_wide(&v);
+        }
+        os_str
     };
 
     let dst = cmake::Config::new(ceres_dir)

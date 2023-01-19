@@ -1,0 +1,106 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  cargo-fmt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Run cargo fmt
+        run: cargo +stable fmt --all --check
+
+  cargo-clippy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install ceres and libclang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libunwind-dev
+          sudo apt-get install -y --no-install-recommends libceres-dev libclang1
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: cargo clippy
+        run: cargo +stable clippy --all-targets --workspace --features ceres-solver-sys/system -- -Dwarnings
+
+  ceres-built-from-source:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        rust_toolchain: ["1.57", "stable"]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install Cmake amd libclang on Linux
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake libclang1
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust_toolchain }}
+      - name: Check workspace
+        run: cargo +${{ matrix.rust_toolchain }} check --all-targets --workspace --features ceres-solver-sys/source
+      - name: Test ceres-solver
+        run: cargo +${{ matrix.rust_toolchain }} test --features ceres-solver-sys/source
+# Doesn't work for now due to C++ stdlib linking issues
+#       - name: Test ceres-solver-sys
+#         run: cargo +${{ matrix.rust_toolchain }} test --features source
+#         working-directory: ceres-solver-sys
+
+  system-ceres:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Help needed for Windows, vcpkg builds it, but I don't know how to make it discoverable
+        os: [ "ubuntu-latest", "macos-latest" ]
+        rust_toolchain: [ "1.57", "stable" ]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install ceres and libclang on Linux
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libunwind-dev
+          sudo apt-get install -y --no-install-recommends libceres-dev libclang1
+      - name: Install ceres on macOS
+        if: ${{ runner.os == 'macOS' }}
+        run: brew install ceres-solver
+      # Not actually used for now, see reasons above
+      - name: Install ceres on Windows
+        if: ${{ runner.os == 'Windows' }}
+        run: vcpkg install ceres:x64-windows
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust_toolchain }}
+      - name: Check ceres-solver
+        run: cargo +${{ matrix.rust_toolchain }} check --all-targets --features ceres-solver-sys/system
+      - name: Check ceres-solver-sys
+        run: cargo +${{ matrix.rust_toolchain }} check --all-targets --features system
+        working-directory: ceres-solver-sys
+      - name: Test ceres-solver
+        run: cargo +${{ matrix.rust_toolchain }} test --features ceres-solver-sys/system
+      - name: Test ceres-solver-sys
+        run: cargo +${{ matrix.rust_toolchain }} test --features system
+        working-directory: ceres-solver-sys
