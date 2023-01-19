@@ -7,6 +7,7 @@ readme = "README.md"
 description = "Rust distribution of Ceres Solver built as a minimal static library"
 repository = "https://github.com/light-curve/ceres-solver-rs"
 license = "MIT OR Apache-2.0"
+rust-version = "1.57.0"
 
 [build-dependencies]
 cmake = "0.1"
