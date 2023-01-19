@@ -5,9 +5,11 @@ fn main() {
     println!("cargo:rerun-if-changed=wrapper.h");
 
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    if target_os == "android" || target_os == "linux" {
+    let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
+    // We don't need to link C++ standard library for Windows MSVC explicitly
+    if target_os == "android" || target_os == "linux" || target_env == "gnu" {
         println!("cargo:rustc-link-lib=stdc++");
-    } else {
+    } else if target_os == "macos" || target_os == "ios" {
         println!("cargo:rustc-link-lib=c++");
     }
 
