@@ -51,6 +51,7 @@ fn main() {
 
     let dst = cmake::Config::new(ceres_dir)
         .profile("Release")
+        .pic(true)
         .env("EIGEN3_ROOT_DIR", eigen_dir)
         .define("CMAKE_MODULE_PATH", eigen_cmake_dir)
         // Most of the options described here:
