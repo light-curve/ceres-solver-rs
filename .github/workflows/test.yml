@@ -32,7 +32,7 @@ jobs:
         with:
           toolchain: stable
       - name: cargo clippy
-        run: cargo +stable clippy --all-targets --workspace --features ceres-solver-sys/system -- -Dwarnings
+        run: cargo +stable clippy --all-targets --workspace --features system -- -Dwarnings
 
   ceres-built-from-source:
     runs-on: ${{ matrix.os }}
@@ -56,9 +56,9 @@ jobs:
         with:
           toolchain: ${{ matrix.rust_toolchain }}
       - name: Check workspace
-        run: cargo +${{ matrix.rust_toolchain }} check --all-targets --workspace --features ceres-solver-sys/source
+        run: cargo +${{ matrix.rust_toolchain }} check --all-targets --workspace --features source
       - name: Test ceres-solver
-        run: cargo +${{ matrix.rust_toolchain }} test --features ceres-solver-sys/source
+        run: cargo +${{ matrix.rust_toolchain }} test --features source
 # Doesn't work for now due to C++ stdlib linking issues
 #       - name: Test ceres-solver-sys
 #         run: cargo +${{ matrix.rust_toolchain }} test --features source
@@ -95,12 +95,12 @@ jobs:
         with:
           toolchain: ${{ matrix.rust_toolchain }}
       - name: Check ceres-solver
-        run: cargo +${{ matrix.rust_toolchain }} check --all-targets --features ceres-solver-sys/system
+        run: cargo +${{ matrix.rust_toolchain }} check --all-targets --features system
       - name: Check ceres-solver-sys
         run: cargo +${{ matrix.rust_toolchain }} check --all-targets --features system
         working-directory: ceres-solver-sys
       - name: Test ceres-solver
-        run: cargo +${{ matrix.rust_toolchain }} test --features ceres-solver-sys/system
+        run: cargo +${{ matrix.rust_toolchain }} test --features system
       - name: Test ceres-solver-sys
         run: cargo +${{ matrix.rust_toolchain }} test --features system
         working-directory: ceres-solver-sys

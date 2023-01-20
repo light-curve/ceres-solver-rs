@@ -18,6 +18,4 @@ This project consists of three crates:
 - `ceres-solver-sys` is an unsafe Rust bindings generated with `bindgen`
 - `ceres-solver-src` is an optional no-code crate to build and distribute static Ceres Solver library
  
-To build Ceres Solver statically and link it to your project, use `ceres-solver-sys`' `source` Cargo feature,
-for example by `cargo ... --features ceres-solver-sys/source`
-or adding `ceres-sovler-sys = { version = "*", features = "source" }` into your `Cargo.toml`.
+To build Ceres Solver statically and link it to your project, use `source` Cargo feature, which would add `ceres-solver-src` dependency to your project.
