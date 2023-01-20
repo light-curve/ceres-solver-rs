@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Cargo features for `ceres-solver` reflecting `ceres-solver-sys` https://github.com/light-curve/ceres-solver-rs/pull/3
+--
 
 ### Changed
 
@@ -25,11 +25,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- docs.rs build https://github.com/light-curve/ceres-solver-rs/pull/3
+--
 
 ### Security
 
 --
+
+## [0.1.1] 2023-01-20
+
+### Added
+
+- Cargo features for `ceres-solver` reflecting `ceres-solver-sys` https://github.com/light-curve/ceres-solver-rs/pull/3
+
+
+### Fixed
+
+- docs.rs build https://github.com/light-curve/ceres-solver-rs/pull/3
 
 ## [0.1.0] 2023-01-19
 
