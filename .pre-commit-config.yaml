@@ -24,7 +24,7 @@ repos:
     -   id: cargo-clippy
         name: cargo clippy
         language: rust
-        entry: cargo clippy --features=source --all-targets --workspace
+        entry: cargo clippy --features=source --all-targets --workspace -- -Dwarnings
         files: \.rs$
         pass_filenames: false
 
