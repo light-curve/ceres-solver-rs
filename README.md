@@ -1,5 +1,5 @@
 # `ceres-solver-rs`
-## Rust bindings for [Google's Ceres Solver](http://ceres-solver.org)
+## Rust bindings for [Ceres Solver](http://ceres-solver.org)
 
 ```shell
 cargo add ceres-solver --features=ceres-solver-sys/source

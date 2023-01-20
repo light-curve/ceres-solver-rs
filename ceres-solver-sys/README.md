@@ -1,5 +1,5 @@
 # `ceres-solver-sys`
-## Low-level unsafe Rust bindings for [Google's Ceres Solver](http://ceres-solver.org)
+## Low-level unsafe Rust bindings for [Ceres Solver](http://ceres-solver.org)
 
 Currently, we bind C API only using [`bindgen`](https://rust-lang.github.io/rust-bindgen/).
 The minimum tested version of Ceres Solver is 1.14.0
