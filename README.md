@@ -1,6 +1,11 @@
 # `ceres-solver-rs`
 ## Rust bindings for [Ceres Solver](http://ceres-solver.org)
 
+[![Test](https://github.com/light-curve/ceres-solver-rs/actions/workflows/test.yml/badge.svg)](https://github.com/light-curve/ceres-solver-rs/actions/workflows/test.yml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/light-curve/ceres-solver-rs/master.svg)](https://results.pre-commit.ci/latest/github/light-curve/ceres-solver-rs/master)
+![docs.rs](https://img.shields.io/docsrs/ceres-solver)
+![Crates.io](https://img.shields.io/crates/v/ceres-solver)
+
 ```shell
 cargo add ceres-solver --features=ceres-solver-sys/source
 ```
