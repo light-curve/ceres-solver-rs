@@ -2,6 +2,7 @@ use crate::cost::{CostFunction, CostFunctionType};
 use crate::loss::LossFunction;
 use crate::nlls_problem::NllsProblem;
 use crate::residual_block::ResidualBlock;
+use crate::types::Either;
 
 pub type CurveFunctionType = Box<dyn Fn(f64, &[f64], &mut f64, Option<&mut [Option<f64>]>) -> bool>;
 
@@ -40,25 +41,31 @@ impl<'cost> CurveFitProblem1D<'cost> {
         parameters: &[f64],
         loss: Option<LossFunction>,
     ) -> Self {
+        assert_eq!(x.len(), y.len());
         let nlls_parameters: Vec<_> = parameters.iter().map(|&x| vec![x]).collect();
         let mut problem = NllsProblem::new();
         let block = ResidualBlock::new(
             nlls_parameters,
-            Self::cost_function(x, y, func.into(), parameters.len()),
+            Self::cost_function(x, y, None, func.into(), parameters.len()),
         )
         .change_loss(loss);
         problem.add_residual_block(block).unwrap();
         Self(problem)
     }
 
+    /// Create a [CurveFitProblem1DBuilder] instance, see its docs for the details.
+    pub fn builder<'param>() -> CurveFitProblem1DBuilder<'cost, 'param> {
+        CurveFitProblem1DBuilder::new()
+    }
+
     fn cost_function(
         x: &'cost [f64],
         y: &'cost [f64],
+        w: Option<&'cost [f64]>,
         curve_func: CurveFunctionType,
         num_parameters: usize,
     ) -> CostFunction<'cost> {
         let parameter_sizes = vec![1_usize; num_parameters];
-        assert_eq!(x.len(), y.len());
         let n_obs = x.len();
         let cost: CostFunctionType = Box::new(move |parameters, residuals, mut jacobians| {
             let mut result = true;
@@ -70,17 +77,21 @@ impl<'cost> CurveFitProblem1D<'cost> {
                     .collect()
             });
             let parameters: Vec<_> = parameters.iter().map(|x| x[0]).collect();
-            for (((i, &x), &y), residual) in (0..n_obs)
+            for ((((i, &x), &y), &w), residual) in (0..n_obs)
                 .zip(x.iter())
                 .zip(y.iter())
+                .zip(match w {
+                    Some(w) => Either::Left(w.iter()),
+                    None => Either::Right(std::iter::repeat(&1.0)),
+                })
                 .zip(residuals.iter_mut())
             {
                 result = curve_func(x, &parameters, &mut f, jac.as_mut().map(|d| &mut d[..]));
-                *residual = y - f;
+                *residual = w * (y - f);
                 if let Some(jacobians) = jacobians.as_mut() {
                     for (d_in, d_out) in jac.as_ref().unwrap().iter().zip(jacobians.iter_mut()) {
                         if let Some(d_out) = d_out.as_mut() {
-                            d_out[i][0] = -d_in.unwrap();
+                            d_out[i][0] = -w * d_in.unwrap();
                         }
                     }
                 }
@@ -101,14 +112,200 @@ impl<'cost> CurveFitProblem1D<'cost> {
     }
 }
 
+/// Builder for [CurveFitProblem1D].
+///
+/// # Example
+///
+/// ```rust
+/// use ceres_solver::curve_fit::{CurveFitProblem1D, CurveFunctionType};
+/// use ceres_solver::loss::LossFunction;
+///
+/// // Linear model
+/// fn model(
+///     x: f64,
+///     parameters: &[f64],
+///     y: &mut f64,
+///     jacobians: Option<&mut [Option<f64>]>,
+/// ) -> bool {
+///     let &[a, b]: &[f64; 2] = parameters.try_into().unwrap();
+///     *y = a * x + b;
+///     if let Some(jacobians) = jacobians {
+///         let [d_da, d_db]: &mut [Option<f64>; 2] = jacobians.try_into().unwrap();
+///         if let Some(d_da) = d_da {
+///             *d_da = x;
+///         }
+///         if let Some(d_db) = d_db {
+///             *d_db = 1.0;
+///         }
+///     }
+///     true
+/// }
+///
+/// let a = 3.0;
+/// let b = -2.0;
+/// let x: Vec<_> = (0..100).map(|i| i as f64).collect();
+/// let y: Vec<_> = x.iter().map(|&x| a * x + b).collect();
+/// // optional data points weights, assumed to be positive
+/// let weights: Vec<_> = x.iter().map(|&x| (x + 1.0) / 100.0).collect();
+///
+/// let func: CurveFunctionType = Box::new(model);
+/// let problem = CurveFitProblem1D::builder()
+///     // Model function
+///     .func(func)
+///     // Initial parameter guess
+///     .parameters(&[1.0, 0.0])
+///     // Data points, weights are optional, if no given unity weights assumed.
+///     .x(&x)
+///     .y(&y)
+///     .weights(&weights)
+///     // Loss function is optional, if not given trivial loss is assumed.
+///     .loss(LossFunction::cauchy(1.0))
+///     .build()
+///     .unwrap();
+/// let solution = problem.to_solution();
+///
+/// assert!(f64::abs(a - solution[0]) < 1e-8);
+/// assert!(f64::abs(b - solution[1]) < 1e-8);
+/// ```
+pub struct CurveFitProblem1DBuilder<'cost, 'param> {
+    pub func: Option<CurveFunctionType>,
+    pub x: Option<&'cost [f64]>,
+    pub y: Option<&'cost [f64]>,
+    /// optional weights
+    pub weights: Option<&'cost [f64]>,
+    pub parameters: Option<&'param [f64]>,
+    /// optional loss function
+    pub loss: Option<LossFunction>,
+}
+
+impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
+    pub fn new() -> Self {
+        Self {
+            func: None,
+            x: None,
+            y: None,
+            weights: None,
+            parameters: None,
+            loss: None,
+        }
+    }
+
+    /// Add model function.
+    pub fn func(mut self, func: impl Into<CurveFunctionType>) -> Self {
+        self.func = Some(func.into());
+        self
+    }
+
+    /// Add independent parameter values for the data points.
+    pub fn x(mut self, x: &'cost [f64]) -> Self {
+        self.x = Some(x);
+        self
+    }
+
+    /// Add values for the data points.
+    pub fn y(mut self, y: &'cost [f64]) -> Self {
+        self.y = Some(y);
+        self
+    }
+
+    /// Add optional weights for the data points. Weights must to be positive (think about
+    /// inverse-squared y's uncertainties). If not given, unity weights are assumed.
+    pub fn weights(mut self, w: &'cost [f64]) -> Self {
+        self.weights = Some(w);
+        self
+    }
+
+    /// Add initial parameter guess slice, it is borrowed until [CurveFitProblem1DBuilder::build()]
+    /// call only, there it will be copied to the [CurveFitProblem1D] instance.
+    pub fn parameters(mut self, parameters: &'param [f64]) -> Self {
+        self.parameters = Some(parameters);
+        self
+    }
+
+    /// Add optional loss function, if not given the trivial loss is assumed.
+    pub fn loss(mut self, loss: LossFunction) -> Self {
+        self.loss = Some(loss);
+        self
+    }
+
+    /// Build the [CurveFitProblem1D] instance. Returns [Err] if one of the mandatory fields is
+    /// missed or data slices have inconsistent lengths.
+    pub fn build(self) -> Result<CurveFitProblem1D<'cost>, CurveFitProblemBuildError> {
+        let func = self.func.ok_or(CurveFitProblemBuildError::MissingFunc)?;
+        let x = self.x.ok_or(CurveFitProblemBuildError::MissingX)?;
+        let y = self.y.ok_or(CurveFitProblemBuildError::MissingY)?;
+        if x.len() != y.len() {
+            return Err(CurveFitProblemBuildError::DataSizesDontMatch);
+        }
+        if let Some(w) = self.weights {
+            if w.len() != x.len() {
+                return Err(CurveFitProblemBuildError::DataSizesDontMatch);
+            }
+        }
+        let nlls_parameters: Vec<Vec<f64>> = self
+            .parameters
+            .ok_or(CurveFitProblemBuildError::MissedParameters)?
+            .iter()
+            .map(|&p| vec![p])
+            .collect();
+        let n_param = nlls_parameters.len();
+        let mut problem = NllsProblem::new();
+        let block = ResidualBlock::new(
+            nlls_parameters,
+            CurveFitProblem1D::cost_function(x, y, self.weights, func, n_param),
+        )
+        .change_loss(self.loss);
+        problem.add_residual_block(block).unwrap();
+        Ok(CurveFitProblem1D(problem))
+    }
+}
+
+impl<'cost, 'param> Default for CurveFitProblem1DBuilder<'cost, 'param> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Error for [CurveFitProblem1DBuilder].
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum CurveFitProblemBuildError {
+    DataSizesDontMatch,
+    MissingFunc,
+    MissingX,
+    MissingY,
+    MissedParameters,
+}
+
+impl std::fmt::Display for CurveFitProblemBuildError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let msg = match self {
+            Self::DataSizesDontMatch => "data arrays have different lengths",
+            Self::MissingFunc => "function is missing",
+            Self::MissingX => "x is missing",
+            Self::MissingY => "y is missing",
+            Self::MissedParameters => "initial parameters' guess are missing",
+        };
+        write!(f, "{}", msg)
+    }
+}
+
+impl std::error::Error for CurveFitProblemBuildError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     use crate::LossFunctionType;
-    use approx::assert_abs_diff_eq;
 
-    fn curve_fit_problem_1d(loss: Option<LossFunction>) {
+    use approx::assert_abs_diff_eq;
+    use rand::{Rng, SeedableRng};
+
+    fn curve_fit_problem_1d(loss: Option<LossFunction>) -> Vec<f64> {
         let (x, y): (Vec<_>, Vec<_>) = [
             0.000000e+00,
             1.133898e+00,
@@ -270,6 +467,8 @@ mod tests {
 
         assert_abs_diff_eq!(0.3, solution[0], epsilon = 0.02);
         assert_abs_diff_eq!(0.1, solution[1], epsilon = 0.04);
+
+        solution
     }
 
     #[test]
@@ -285,12 +484,76 @@ mod tests {
             out[2] = -2.0 * squared_norm * out[1].powi(2);
         });
         let loss = LossFunction::custom(loss);
-        curve_fit_problem_1d(Some(loss))
+        curve_fit_problem_1d(Some(loss));
     }
 
     #[test]
     fn test_curve_fit_problem_2d_stock_arctan_loss() {
         let loss = LossFunction::arctan(1.0);
         curve_fit_problem_1d(Some(loss));
+    }
+
+    /// y = a * sin (b * x) + c
+    fn model(
+        x: f64,
+        parameters: &[f64],
+        y: &mut f64,
+        jacobians: Option<&mut [Option<f64>]>,
+    ) -> bool {
+        let &[a, b, c]: &[f64; 3] = parameters.try_into().unwrap();
+        *y = a * f64::sin(b * x) + c;
+        if let Some(jacobians) = jacobians {
+            let [d_da, d_db, d_dc]: &mut [Option<f64>; 3] = jacobians.try_into().unwrap();
+            if let Some(d_da) = d_da {
+                *d_da = f64::sin(b * x);
+            }
+            if let Some(d_db) = d_db {
+                *d_db = a * b * f64::cos(b * x);
+            }
+            if let Some(d_dc) = d_dc {
+                *d_dc = 1.0;
+            }
+        }
+        true
+    }
+
+    #[test]
+    fn compare_new_with_build() {
+        const N: usize = 1000;
+
+        const TRUE_PARAM: [f64; 3] = [1.5, std::f64::consts::PI, -1.0];
+
+        let x: Vec<_> = (0..N).map(|i| i as f64 / N as f64).collect();
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(0);
+        let noise_level: f64 = 0.1;
+        let y: Vec<_> = x
+            .iter()
+            .map(|&x| {
+                let mut y = 0.0;
+                model(x, &TRUE_PARAM, &mut y, None);
+                let sigma = noise_level * rng.sample::<f64, _>(rand_distr::StandardNormal);
+                y + sigma
+            })
+            .collect();
+        let w = vec![noise_level.powi(-2); x.len()];
+
+        let initial_guess = [0.0, 1.0, 0.0];
+
+        let func: CurveFunctionType = Box::new(model);
+        let solution_new = CurveFitProblem1D::new(func, &x, &y, &initial_guess, None).to_solution();
+
+        let func: CurveFunctionType = Box::new(model);
+        let solution_build = CurveFitProblem1D::builder()
+            .func(func)
+            .x(&x)
+            .y(&y)
+            .weights(&w)
+            .parameters(&initial_guess)
+            .build()
+            .unwrap()
+            .to_solution();
+
+        assert_abs_diff_eq!(&solution_new[..], &solution_build[..], epsilon = 1e-10);
+        assert_abs_diff_eq!(&TRUE_PARAM[..], &solution_new[..], epsilon = 0.02);
     }
 }
