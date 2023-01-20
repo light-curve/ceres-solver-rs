@@ -7,7 +7,7 @@
 ![Crates.io](https://img.shields.io/crates/v/ceres-solver)
 
 ```shell
-cargo add ceres-solver --features=ceres-solver-sys/source
+cargo add ceres-solver --features=source
 ```
 
 Ceres Solver is a C++ library for large optimization problems.
