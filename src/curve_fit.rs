@@ -168,11 +168,15 @@ impl<'cost> CurveFitProblem1D<'cost> {
 /// assert!(f64::abs(b - solution[1]) < 1e-8);
 /// ```
 pub struct CurveFitProblem1DBuilder<'cost, 'param> {
+    /// Model function
     pub func: Option<CurveFunctionType>,
+    /// Independent coordinates for data
     pub x: Option<&'cost [f64]>,
+    /// Values for data
     pub y: Option<&'cost [f64]>,
     /// optional inversed errors - square root of the weight
     pub inversed_error: Option<&'cost [f64]>,
+    /// Initial parameters' guess
     pub parameters: Option<&'param [f64]>,
     /// optional loss function
     pub loss: Option<LossFunction>,
