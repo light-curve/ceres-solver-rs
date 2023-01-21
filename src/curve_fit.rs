@@ -61,7 +61,7 @@ impl<'cost> CurveFitProblem1D<'cost> {
     fn cost_function(
         x: &'cost [f64],
         y: &'cost [f64],
-        w: Option<&'cost [f64]>,
+        inv_err: Option<&'cost [f64]>,
         curve_func: CurveFunctionType,
         num_parameters: usize,
     ) -> CostFunction<'cost> {
@@ -77,21 +77,21 @@ impl<'cost> CurveFitProblem1D<'cost> {
                     .collect()
             });
             let parameters: Vec<_> = parameters.iter().map(|x| x[0]).collect();
-            for ((((i, &x), &y), &w), residual) in (0..n_obs)
+            for ((((i, &x), &y), &inv_err), residual) in (0..n_obs)
                 .zip(x.iter())
                 .zip(y.iter())
-                .zip(match w {
-                    Some(w) => Either::Left(w.iter()),
+                .zip(match inv_err {
+                    Some(inv_err) => Either::Left(inv_err.iter()),
                     None => Either::Right(std::iter::repeat(&1.0)),
                 })
                 .zip(residuals.iter_mut())
             {
                 result = curve_func(x, &parameters, &mut f, jac.as_mut().map(|d| &mut d[..]));
-                *residual = w * (y - f);
+                *residual = inv_err * (y - f);
                 if let Some(jacobians) = jacobians.as_mut() {
                     for (d_in, d_out) in jac.as_ref().unwrap().iter().zip(jacobians.iter_mut()) {
                         if let Some(d_out) = d_out.as_mut() {
-                            d_out[i][0] = -w * d_in.unwrap();
+                            d_out[i][0] = -inv_err * d_in.unwrap();
                         }
                     }
                 }
@@ -145,8 +145,8 @@ impl<'cost> CurveFitProblem1D<'cost> {
 /// let b = -2.0;
 /// let x: Vec<_> = (0..100).map(|i| i as f64).collect();
 /// let y: Vec<_> = x.iter().map(|&x| a * x + b).collect();
-/// // optional data points weights, assumed to be positive
-/// let weights: Vec<_> = x.iter().map(|&x| (x + 1.0) / 100.0).collect();
+/// // optional data points inversed errors, assumed to be positive
+/// let inversed_error: Vec<_> = x.iter().map(|&x| (x + 1.0) / 100.0).collect();
 ///
 /// let func: CurveFunctionType = Box::new(model);
 /// let problem = CurveFitProblem1D::builder()
@@ -154,10 +154,10 @@ impl<'cost> CurveFitProblem1D<'cost> {
 ///     .func(func)
 ///     // Initial parameter guess
 ///     .parameters(&[1.0, 0.0])
-///     // Data points, weights are optional, if no given unity weights assumed.
+///     // Data points, inversed errors are optional, if no given unity errors assumed.
 ///     .x(&x)
 ///     .y(&y)
-///     .weights(&weights)
+///     .inversed_error(&inversed_error)
 ///     // Loss function is optional, if not given trivial loss is assumed.
 ///     .loss(LossFunction::cauchy(1.0))
 ///     .build()
@@ -171,8 +171,8 @@ pub struct CurveFitProblem1DBuilder<'cost, 'param> {
     pub func: Option<CurveFunctionType>,
     pub x: Option<&'cost [f64]>,
     pub y: Option<&'cost [f64]>,
-    /// optional weights
-    pub weights: Option<&'cost [f64]>,
+    /// optional inversed errors - square root of the weight
+    pub inversed_error: Option<&'cost [f64]>,
     pub parameters: Option<&'param [f64]>,
     /// optional loss function
     pub loss: Option<LossFunction>,
@@ -184,7 +184,7 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
             func: None,
             x: None,
             y: None,
-            weights: None,
+            inversed_error: None,
             parameters: None,
             loss: None,
         }
@@ -208,10 +208,11 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
         self
     }
 
-    /// Add optional weights for the data points. Weights must to be positive (think about
-    /// inverse-squared y's uncertainties). If not given, unity weights are assumed.
-    pub fn weights(mut self, w: &'cost [f64]) -> Self {
-        self.weights = Some(w);
+    /// Add optional inversed errors for the data points. They must to be positive: think about them
+    /// as the inverse y's uncertainties, or square root of the data point weight. The residual
+    /// would be `(y - model(x)) * inversed_error`. If not given, unity valueas are assumed.
+    pub fn inversed_error(mut self, inv_err: &'cost [f64]) -> Self {
+        self.inversed_error = Some(inv_err);
         self
     }
 
@@ -237,8 +238,8 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
         if x.len() != y.len() {
             return Err(CurveFitProblemBuildError::DataSizesDontMatch);
         }
-        if let Some(w) = self.weights {
-            if w.len() != x.len() {
+        if let Some(inversed_error) = self.inversed_error {
+            if inversed_error.len() != x.len() {
                 return Err(CurveFitProblemBuildError::DataSizesDontMatch);
             }
         }
@@ -252,7 +253,7 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
         let mut problem = NllsProblem::new();
         let block = ResidualBlock::new(
             nlls_parameters,
-            CurveFitProblem1D::cost_function(x, y, self.weights, func, n_param),
+            CurveFitProblem1D::cost_function(x, y, self.inversed_error, func, n_param),
         )
         .change_loss(self.loss);
         problem.add_residual_block(block).unwrap();
@@ -535,7 +536,7 @@ mod tests {
                 y + sigma
             })
             .collect();
-        let w = vec![noise_level.powi(-2); x.len()];
+        let w = vec![noise_level.powi(-1); x.len()];
 
         let initial_guess = [0.0, 1.0, 0.0];
 
@@ -547,7 +548,7 @@ mod tests {
             .func(func)
             .x(&x)
             .y(&y)
-            .weights(&w)
+            .inversed_error(&w)
             .parameters(&initial_guess)
             .build()
             .unwrap()
