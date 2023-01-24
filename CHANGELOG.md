@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `CurveFitProblem1D::builder` which allows to build a curve fit problem with data point uncertainties.
+--
 
 ### Changed
 
@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 --
+
+## [0.1.2] 2023-01-24
+
+### Added
+
+- `CurveFitProblem1D::builder` which allows to build a curve fit problem with data point uncertainties.
 
 ## [0.1.1] 2023-01-20
 
