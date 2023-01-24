@@ -65,7 +65,7 @@
 //!     x: f64,
 //!     parameters: &[f64],
 //!     y: &mut f64,
-//!     mut jacobians: Option<&mut [Option<f64>]>,
+//!     jacobians: Option<&mut [Option<f64>]>,
 //! ) -> bool {
 //!     let &[a, b, c]: &[f64; 3] = parameters.try_into().unwrap();
 //!     *y = a * x.powi(2) + b * x + c;

@@ -1,6 +1,8 @@
 use std::fmt::{Debug, Display, Formatter};
 
+/// Main error enum of the crate.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Error {
     ProblemNotReady,
     ProblemAlreadySolved,

@@ -1,6 +1,6 @@
 [package]
 name = "ceres-solver"
-version = "0.1.1"
+version = "0.1.2-beta.1"
 edition = "2021"
 readme = "README.md"
 description = "Safe Rust bindings for the Ceres Solver"
@@ -27,6 +27,9 @@ path = "./ceres-solver-sys"
 
 [dev-dependencies]
 approx = "0.5"
+rand = "0.8"
+rand_chacha = "0.3"
+rand_distr = "0.4"
 
 [package.metadata.docs.rs]
 features = ["source"]
