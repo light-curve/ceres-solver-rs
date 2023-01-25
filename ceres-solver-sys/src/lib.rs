@@ -1,3 +1,5 @@
+pub use cxx;
+
 #[cxx::bridge(namespace = "ceres")]
 pub mod ffi {
     // The explicit lifetimes make some signatures more verbose.
