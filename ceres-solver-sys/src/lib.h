@@ -105,7 +105,17 @@ namespace ceres {
     struct SolverSummary {
         Solver::Summary inner;
         SolverSummary();
+        std::unique_ptr<std::string> brief_report() const;
         std::unique_ptr<std::string> full_report() const;
+        bool is_solution_usable() const;
+        double initial_cost() const;
+        double final_cost() const;
+        double fixed_cost() const;
+        int num_successful_steps() const;
+        int num_unsuccessful_steps() const;
+        int num_inner_iteration_steps() const;
+        int num_line_search_steps() const;
+        // No times nor sovler/problem options for now.
     };
     std::unique_ptr<SolverSummary> new_solver_summary();
 

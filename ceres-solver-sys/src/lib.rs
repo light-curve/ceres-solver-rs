@@ -164,6 +164,55 @@ pub mod ffi {
         type ResidualBlockId;
 
         type Problem<'cost>;
+        /// Set parameter to be constant.
+        ///
+        /// # Safety
+        /// `values` must point to already added parameter block.
+        unsafe fn SetParameterBlockConstant(self: Pin<&mut Problem>, values: *const f64);
+        /// Set parameter to vary.
+        ///
+        /// # Safety
+        /// `values` must point to already added parameter block.
+        unsafe fn SetParameterBlockVariable(self: Pin<&mut Problem>, values: *mut f64);
+        /// Check if parameter is constant.
+        ///
+        /// # Safety
+        /// `values` must point to already added parameter block.
+        unsafe fn IsParameterBlockConstant(self: &Problem, values: *const f64) -> bool;
+        /// Set lower bound for a component of a parameter block.
+        ///
+        /// # Safety
+        /// `values` must point to already added parameter block.
+        unsafe fn SetParameterLowerBound(
+            self: Pin<&mut Problem>,
+            values: *mut f64,
+            index: i32,
+            lower_bound: f64,
+        );
+        /// Set upper bound for a component of a parameter block.
+        ///
+        /// # Safety
+        /// `values` must point to already added parameter block.
+        unsafe fn SetParameterUpperBound(
+            self: Pin<&mut Problem>,
+            values: *mut f64,
+            index: i32,
+            upper_bound: f64,
+        );
+        fn NumParameterBlocks(self: &Problem) -> i32;
+        fn NumParameters(self: &Problem) -> i32;
+        fn NumResidualBlocks(self: &Problem) -> i32;
+        fn NumResiduals(self: &Problem) -> i32;
+        /// Number of components of the parameter.
+        ///
+        /// # Safety
+        /// `values` must point to already added parameter block.
+        unsafe fn ParameterBlockSize(self: &Problem, values: *const f64) -> i32;
+        /// Checks if problem has a given parameter.
+        ///
+        /// # Safety
+        /// It should be safe to call this function with any pointer.
+        unsafe fn HasParameterBlock(self: &Problem, values: *const f64) -> bool;
         /// Creates new Problem.
         fn new_problem<'cost>() -> UniquePtr<Problem<'cost>>;
         /// Adds a residual block to the problem.
@@ -306,7 +355,16 @@ pub mod ffi {
         fn new_solver_options() -> UniquePtr<SolverOptions>;
 
         type SolverSummary;
+        fn brief_report(self: &SolverSummary) -> UniquePtr<CxxString>;
         fn full_report(self: &SolverSummary) -> UniquePtr<CxxString>;
+        fn is_solution_usable(self: &SolverSummary) -> bool;
+        fn initial_cost(self: &SolverSummary) -> f64;
+        fn final_cost(self: &SolverSummary) -> f64;
+        fn fixed_cost(self: &SolverSummary) -> f64;
+        fn num_successful_steps(self: &SolverSummary) -> i32;
+        fn num_unsuccessful_steps(self: &SolverSummary) -> i32;
+        fn num_inner_iteration_steps(self: &SolverSummary) -> i32;
+        fn num_line_search_steps(self: &SolverSummary) -> i32;
         /// Create an instance wrapping Solver::Summary.
         fn new_solver_summary() -> UniquePtr<SolverSummary>;
 

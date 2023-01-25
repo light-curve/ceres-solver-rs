@@ -226,8 +226,35 @@ namespace ceres {
 
     SolverSummary::SolverSummary():
         inner(Solver::Summary()) {}
+    std::unique_ptr<std::string> SolverSummary::brief_report() const {
+        return std::make_unique<std::string>(inner.BriefReport());
+    }
     std::unique_ptr<std::string> SolverSummary::full_report() const {
         return std::make_unique<std::string>(inner.FullReport());
+    }
+    bool SolverSummary::is_solution_usable() const {
+        return inner.IsSolutionUsable();
+    }
+    double SolverSummary::initial_cost() const {
+        return inner.initial_cost;
+    }
+    double SolverSummary::final_cost() const {
+        return inner.final_cost;
+    }
+    double SolverSummary::fixed_cost() const {
+        return inner.fixed_cost;
+    }
+    int SolverSummary::num_successful_steps() const {
+        return inner.num_successful_steps;
+    }
+    int SolverSummary::num_unsuccessful_steps() const {
+        return inner.num_unsuccessful_steps;
+    }
+    int SolverSummary::num_inner_iteration_steps() const {
+        return inner.num_inner_iteration_steps;
+    }
+    int SolverSummary::num_line_search_steps() const {
+        return inner.num_line_search_steps;
     }
     std::unique_ptr<SolverSummary> new_solver_summary() {
         return std::make_unique<SolverSummary>();
