@@ -8,10 +8,7 @@ fn main() {
     cxx_build::bridge("src/lib.rs")
         .file("src/lib.cpp")
         .flag("-std=c++17")
-        .include(env::var("DEP_CERES_INCLUDE").unwrap())
-        .include("/opt/homebrew/opt/eigen/include/eigen3")
-        .include("/opt/homebrew/opt/glog/include")
-        .include("/opt/homebrew/opt/gflags/include")
+        .includes(env::split_paths(&env::var("DEP_CERES_INCLUDE").unwrap()))
         .compile("ceres-solver-sys");
 
     #[cfg(feature = "source")]

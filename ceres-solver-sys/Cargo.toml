@@ -15,7 +15,7 @@ source = ["ceres-solver-src"]
 default = ["system"]
 
 [dependencies.ceres-solver-src]
-version = "0.1.0"
+version = "0.1.1-beta.0"
 path = "../ceres-solver-src"
 optional = true
 
