@@ -73,8 +73,8 @@ namespace ceres {
 
     SolverOptions::SolverOptions():
         inner(Solver::Options()) {}
-    bool SolverOptions::is_valid(std::unique_ptr<std::string>& error) const {
-        return inner.IsValid(error.get());
+    bool SolverOptions::is_valid(std::string& error) const {
+        return inner.IsValid(&error);
     }
     void SolverOptions::set_minimizer_type(MinimizerType minimizer_type) {
         inner.minimizer_type = minimizer_type;

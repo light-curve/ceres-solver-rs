@@ -230,7 +230,7 @@ pub mod ffi {
         ) -> SharedPtr<ResidualBlockId>;
 
         type SolverOptions;
-        fn is_valid(self: &SolverOptions, error: &mut UniquePtr<CxxString>) -> bool;
+        fn is_valid(self: &SolverOptions, error: Pin<&mut CxxString>) -> bool;
         fn set_minimizer_type(self: Pin<&mut SolverOptions>, minimizer_type: MinimizerType);
         fn set_line_search_direction_type(
             self: Pin<&mut SolverOptions>,

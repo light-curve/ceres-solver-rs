@@ -50,7 +50,7 @@ namespace ceres {
     struct SolverOptions {
         Solver::Options inner;
         SolverOptions();
-        bool is_valid(std::unique_ptr<std::string>& error) const;
+        bool is_valid(std::string& error) const;
         void set_minimizer_type(MinimizerType minimizer_type);
         void set_line_search_direction_type(LineSearchDirectionType line_search_direction_type);
         void set_line_search_type(LineSearchType line_search_type);
