@@ -1,15 +1,36 @@
-use std::env;
-
 fn main() {
     println!("cargo:rerun-if-changed=src/lib.h");
     println!("cargo:rerun-if-changed=src/lib.cpp");
     println!("cargo:rerun-if-changed=src/lib.rs");
 
-    cxx_build::bridge("src/lib.rs")
-        .file("src/lib.cpp")
-        .flag("-std=c++17")
-        .includes(env::split_paths(&env::var("DEP_CERES_INCLUDE").unwrap()))
-        .compile("ceres-solver-sys");
+    let mut cc_build = cxx_build::bridge("src/lib.rs");
+    cc_build.file("src/lib.cpp");
+    cc_build.flag("-std=c++17");
+    #[cfg(feature = "source")]
+    {
+        cc_build.includes(std::env::split_paths(
+            &std::env::var("DEP_CERES_INCLUDE").unwrap(),
+        ));
+    }
+    #[cfg(not(feature = "source"))]
+    {
+        // Helps on Ubuntu
+        #[cfg(target_os = "linux")]
+        {
+            cc_build.include("/usr/include/eigen3");
+        }
+        // Helps on x86_64 macOS with Homebrew
+        #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
+        {
+            cc_build.include("/usr/local/include/eigen3");
+        }
+        // Helps on aarch64 macOS with Homebrew
+        #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+        {
+            cc_build.include("/opt/homebrew/include/eigen3");
+        }
+    }
+    cc_build.compile("ceres-solver-sys");
 
     #[cfg(feature = "source")]
     {
