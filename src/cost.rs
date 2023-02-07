@@ -1,21 +1,16 @@
 use crate::types::JacobianType;
-use std::os::raw::{c_int, c_void};
-use std::pin::Pin;
+
+use ceres_solver_sys::cxx;
+use ceres_solver_sys::ffi;
 use std::slice;
 
 pub type CostFunctionType<'a> = Box<dyn Fn(&[&[f64]], &mut [f64], JacobianType<'_>) -> bool + 'a>;
 
-pub(crate) struct CostFunctionInner<'a> {
-    parameter_sizes: Vec<usize>,
-    num_residuals: usize,
-    func: CostFunctionType<'a>,
-}
-
 /// A cost function for [ResidualBlock](crate::residual_block::ResidualBlock) of the
 /// [NllsProblem](crate::nlls_problem::NllsProblem).
-pub struct CostFunction<'a>(Pin<Box<CostFunctionInner<'a>>>);
+pub struct CostFunction<'cost>(cxx::UniquePtr<ffi::CallbackCostFunction<'cost>>);
 
-impl<'a> CostFunction<'a> {
+impl<'cost> CostFunction<'cost> {
     /// Create a new cost function for [ResidualBlock](crate::residual_block::ResidualBlock) from
     /// a Rust function.
     ///
@@ -40,48 +35,44 @@ impl<'a> CostFunction<'a> {
     /// - num_residuals - length of the residual vector, usually corresponds to the number of
     /// data points.
     pub fn new(
-        func: impl Into<CostFunctionType<'a>>,
+        func: impl Into<CostFunctionType<'cost>>,
         parameter_sizes: impl Into<Vec<usize>>,
         num_residuals: usize,
     ) -> Self {
-        Self(Box::pin(CostFunctionInner {
-            func: func.into(),
-            parameter_sizes: parameter_sizes.into(),
-            num_residuals,
-        }))
+        let parameter_sizes = parameter_sizes.into();
+        let parameter_block_sizes: Vec<_> =
+            parameter_sizes.iter().map(|&size| size as i32).collect();
+
+        let safe_func = func.into();
+        let rust_func: Box<dyn Fn(*const *const f64, *mut f64, *mut *mut f64) -> bool + 'cost> =
+            Box::new(move |parameters_ptr, residuals_ptr, jacobians_ptr| {
+                let parameter_pointers =
+                    unsafe { slice::from_raw_parts(parameters_ptr, parameter_sizes.len()) };
+                let parameters = parameter_pointers
+                    .iter()
+                    .zip(parameter_sizes.iter())
+                    .map(|(&p, &size)| unsafe { slice::from_raw_parts(p, size) })
+                    .collect::<Vec<_>>();
+                let residuals = unsafe { slice::from_raw_parts_mut(residuals_ptr, num_residuals) };
+                let mut jacobians_owned =
+                    OwnedJacobian::from_pointer(jacobians_ptr, &parameter_sizes, num_residuals);
+                let mut jacobian_references = jacobians_owned.references();
+                safe_func(
+                    &parameters,
+                    residuals,
+                    jacobian_references.as_mut().map(|v| &mut v[..]),
+                )
+            });
+        let inner = ffi::new_callback_cost_function(
+            Box::new(rust_func.into()),
+            num_residuals as i32,
+            &parameter_block_sizes,
+        );
+        Self(inner)
     }
 
-    pub(crate) fn cost_function_data(&mut self) -> *mut c_void {
-        Pin::into_inner(self.0.as_mut()) as *mut CostFunctionInner as *mut c_void
-    }
-
-    /// Lengths of the parameter vectors.
-    #[inline]
-    pub fn parameter_sizes(&self) -> &[usize] {
-        &self.0.parameter_sizes
-    }
-
-    /// Length of the residual vector.
-    #[inline]
-    pub fn num_residuals(&self) -> usize {
-        self.0.num_residuals
-    }
-
-    /// Parameter count.
-    #[inline]
-    pub fn num_parameters(&self) -> usize {
-        self.0.parameter_sizes.len()
-    }
-
-    /// Calls underlying cost function.
-    #[inline]
-    pub fn cost(
-        &self,
-        parameters: &[&[f64]],
-        residuals: &mut [f64],
-        jacobians: JacobianType<'_>,
-    ) -> bool {
-        (self.0.func)(parameters, residuals, jacobians)
+    pub fn into_inner(self) -> cxx::UniquePtr<ffi::CallbackCostFunction<'cost>> {
+        self.0
     }
 }
 
@@ -130,34 +121,4 @@ impl<'a> OwnedDerivative<'a> {
             .collect();
         Self(Some(v))
     }
-}
-
-#[no_mangle]
-pub(crate) unsafe extern "C" fn ffi_cost_function(
-    user_data: *mut c_void,
-    parameters: *mut *mut f64,
-    residuals: *mut f64,
-    jacobians: *mut *mut f64,
-) -> c_int {
-    let cost_function_inner = (user_data as *mut CostFunctionInner).as_ref().unwrap();
-    let parameter_pointers =
-        slice::from_raw_parts(parameters, cost_function_inner.parameter_sizes.len());
-    let parameters = parameter_pointers
-        .iter()
-        .zip(cost_function_inner.parameter_sizes.iter())
-        .map(|(&p, &size)| slice::from_raw_parts(p, size))
-        .collect::<Vec<_>>();
-    let residuals = slice::from_raw_parts_mut(residuals, cost_function_inner.num_residuals);
-    let mut jacobians_owned = OwnedJacobian::from_pointer(
-        jacobians,
-        &cost_function_inner.parameter_sizes,
-        cost_function_inner.num_residuals,
-    );
-    let mut jacobian_references = jacobians_owned.references();
-    (cost_function_inner.func)(
-        &parameters,
-        residuals,
-        jacobian_references.as_mut().map(|v| &mut v[..]),
-    )
-    .into()
 }
