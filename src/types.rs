@@ -1,3 +1,5 @@
+//! Various helper types.
+
 pub type JacobianType<'a> = Option<&'a mut [Option<&'a mut [&'a mut [f64]]>]>;
 
 pub(crate) enum Either<A, B> {

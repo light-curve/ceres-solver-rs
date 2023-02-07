@@ -1,3 +1,5 @@
+//! Parameter block and related structures for [NllsProblem](crate::nlls_problem::NllsProblem).
+
 use crate::error::ParameterBlockStorageError;
 
 use std::pin::Pin;

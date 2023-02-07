@@ -1,3 +1,11 @@
+//! Loss functions for [NllsProblem](crate::nlls_problem::NllsProblem) and
+//! [CurveFitProblem1D](crate::curve_fit::CurveFitProblem1D).
+//!
+//! Loss function is a function applied to a squared norm of the problem, it could help in reducing
+//! outliers data for better convergence. There are two types of them: ones built from custom
+//! functions boxed into [LossFunctionType] and Ceres stock functions having one or two
+//! scale parameters.
+
 use ceres_solver_sys::cxx::UniquePtr;
 use ceres_solver_sys::ffi;
 

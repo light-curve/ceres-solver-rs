@@ -1,3 +1,8 @@
+//! Cost function wrapper for [NllsProblem](crate::nlls_problem::NllsProblem).
+//!
+//! Box your cost function into [CostFunctionType] to add it to problem using
+//! [crate::nlls_problem::ResidualBlockBuilder::set_cost]
+
 use crate::types::JacobianType;
 
 use ceres_solver_sys::cxx;

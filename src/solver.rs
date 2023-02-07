@@ -1,3 +1,5 @@
+//! Structures for solver configuration and report.
+
 use crate::error::SolverOptionsBuildingError;
 use crate::residual_block::ResidualBlockId;
 

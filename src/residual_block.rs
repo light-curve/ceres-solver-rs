@@ -1,3 +1,5 @@
+//! Residual-block related structures.
+
 use ceres_solver_sys::cxx::SharedPtr;
 use ceres_solver_sys::ffi;
 use std::pin::Pin;

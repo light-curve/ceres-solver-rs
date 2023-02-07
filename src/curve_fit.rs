@@ -1,3 +1,11 @@
+//! Wrapping [NllsProblem](crate::nlls_problem::NllsProblem) for 1-D curve fit problems.
+//!
+//! [CurveFitProblem1D] wraps [NllsProblem](crate::nlls_problem::NllsProblem) to give a simpler
+//! interface for the problem of 1-D curve fitting: optimizing parameters of a function boxed into
+//! [CurveFunctionType] for given `x`, `y` and optionally inverse y error values. This approach
+//! also simplifies parameter usage, assuming that the function depends on a single parameter
+//! only.
+
 use crate::cost::CostFunctionType;
 use crate::error::CurveFitProblemBuildError;
 use crate::loss::LossFunction;
