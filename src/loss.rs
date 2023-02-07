@@ -3,7 +3,7 @@ use ceres_solver_sys::ffi;
 
 pub type LossFunctionType = Box<dyn Fn(f64, &mut [f64; 3])>;
 
-/// Loss function for [ResidualBlock](crate::residual_block::ResidualBlock) and
+/// Loss function for [NllsProblem](crate::nlls_problem::NllsProblem) and
 /// [CurveFitProblem1D](crate::curve_fit::CurveFitProblem1D), it is a transformation of the squared
 /// residuals which is generally used to make the solver less sensitive to outliers. This enum has
 /// two flavours: user specified function and Ceres stock function.

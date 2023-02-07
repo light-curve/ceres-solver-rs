@@ -6,13 +6,11 @@ use std::slice;
 
 pub type CostFunctionType<'a> = Box<dyn Fn(&[&[f64]], &mut [f64], JacobianType<'_>) -> bool + 'a>;
 
-/// A cost function for [ResidualBlock](crate::residual_block::ResidualBlock) of the
-/// [NllsProblem](crate::nlls_problem::NllsProblem).
+/// A cost function for [NllsProblem](crate::nlls_problem::NllsProblem).
 pub struct CostFunction<'cost>(cxx::UniquePtr<ffi::CallbackCostFunction<'cost>>);
 
 impl<'cost> CostFunction<'cost> {
-    /// Create a new cost function for [ResidualBlock](crate::residual_block::ResidualBlock) from
-    /// a Rust function.
+    /// Create a new cost function from a Rust function.
     ///
     /// # Arguments
     /// - func - function to find residuals and Jacobian for the problem block. The function itself

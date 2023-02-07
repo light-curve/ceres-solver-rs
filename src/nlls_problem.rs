@@ -2,11 +2,11 @@
 //!
 //! The diagram shows the lifecycle of a [NllsProblem]:
 //! ```text
-//!    x                                   x
-//!    │EmptyNllsProblem::new_empty()      │NllsProblem::new()
-//!    │                                   │
-//! ┌──▼─────────────┐                     │
-//! │EmptyNllsProblem│◄────────────────────┘
+//!    x                             x
+//!    │EmptyNllsProblem::new()      │NllsProblem::new_empty()
+//!    │                             │
+//! ┌──▼─────────────┐               │
+//! │EmptyNllsProblem│◄──────────────┘
 //! └──┬─────────────┘
 //!    │  .residual_block_builder(self)
 //! ┌──▼─────────────────┐

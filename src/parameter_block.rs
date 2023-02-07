@@ -2,8 +2,7 @@ use crate::error::ParameterBlockStorageError;
 
 use std::pin::Pin;
 
-/// Parameter vector representation to use with
-/// [ResidualBlock](crate::residual_block::ResidualBlock).
+/// Parameter vector representation to use with [NllsProblem](crate::nlls_problem::NllsProblem).
 pub struct ParameterBlock {
     values: Pin<Vec<f64>>,
     pointer: *mut f64,
