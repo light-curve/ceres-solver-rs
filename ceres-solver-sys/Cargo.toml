@@ -20,12 +20,12 @@ path = "../ceres-solver-src"
 optional = true
 
 [dependencies.cxx]
-version = "1"
+version = "1,<1.0.87"  # 1.0.87 requires MSRV 1.60
 features = ["c++17"]
 
 [build-dependencies]
 cmake = "0.1"
-cxx-build = "1.0"
+cxx-build = "1,<1.0.87"  # 1.0.87 requires MSRV 1.60
 pkg-config = {version = "0.3", optional = true}
 
 [dev-dependencies]
