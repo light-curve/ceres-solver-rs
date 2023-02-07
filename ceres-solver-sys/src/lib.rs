@@ -336,7 +336,7 @@ pub mod ffi {
         );
         fn set_trust_region_problem_dump_directory(
             self: Pin<&mut SolverOptions>,
-            directory: UniquePtr<CxxString>,
+            directory: Pin<&CxxString>,
         );
         fn set_trust_region_problem_dump_format_type(
             self: Pin<&mut SolverOptions>,

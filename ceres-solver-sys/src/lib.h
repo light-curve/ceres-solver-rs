@@ -92,7 +92,7 @@ namespace ceres {
         void set_logging_type(LoggingType logging_type);
         void set_minimizer_progress_to_stdout(bool yes);
         void set_trust_region_minimizer_iterations_to_dump(rust::Slice<const int32_t> iterations);
-        void set_trust_region_problem_dump_directory(std::unique_ptr<std::string> directory);
+        void set_trust_region_problem_dump_directory(const std::string& directory);
         void set_trust_region_problem_dump_format_type(DumpFormatType trust_region_problem_dump_format_type);
         void set_check_gradients(bool yes);
         void set_gradient_check_relative_precision(double relative_precision);

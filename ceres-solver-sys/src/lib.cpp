@@ -2,6 +2,8 @@
 // Created by Konstantin Malanchev on 2023-01-24.
 //
 
+#include <glog/logging.h>
+
 #include "ceres-solver-sys/src/lib.h"
 #include "ceres-solver-sys/src/lib.rs.h"
 
@@ -202,8 +204,8 @@ namespace ceres {
             inner.trust_region_minimizer_iterations_to_dump.push_back(iteration);
         }
     }
-    void SolverOptions::set_trust_region_problem_dump_directory(std::unique_ptr<std::string> directory) {
-        inner.trust_region_problem_dump_directory = *directory;
+    void SolverOptions::set_trust_region_problem_dump_directory(const std::string& directory) {
+        inner.trust_region_problem_dump_directory = directory;
     }
     void SolverOptions::set_trust_region_problem_dump_format_type(DumpFormatType trust_region_problem_dump_format_type) {
         inner.trust_region_problem_dump_format_type = trust_region_problem_dump_format_type;
