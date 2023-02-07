@@ -91,13 +91,14 @@ fn main() {
         dir
     };
 
-    copy_dir(&eigen_include_dir, &dst_eigen_include).unwrap();
+    copy_dir(eigen_include_dir, dst_eigen_include).unwrap();
 
     let dst_ceres = cmake::Config::new(ceres_dir)
         .profile("Release")
         .pic(true)
         .env("EIGEN3_ROOT_DIR", &eigen_dir)
         .define("CMAKE_MODULE_PATH", eigen_cmake_dir)
+        .define("CMAKE_CXX_FLAGS", "-DEIGEN_NO_DEBUG")
         // Most of the options described here:
         // http://ceres-solver.org/installation.html#customizing-the-build
         .define("CUDA", "OFF")
@@ -131,7 +132,7 @@ fn main() {
         dir
     };
     let dst_ceres_lib = {
-        let mut dir = dst_ceres.clone();
+        let mut dir = dst_ceres;
         dir.push("lib");
         dir
     };
