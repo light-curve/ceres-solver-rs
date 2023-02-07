@@ -82,6 +82,7 @@ pub mod ffi {
     enum DenseLinearAlgebraLibraryType {
         EIGEN,
         LAPACK,
+        #[cfg(feature = "v2_1")]
         CUDA,
     }
 

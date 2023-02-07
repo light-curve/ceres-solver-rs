@@ -40,7 +40,7 @@ fn main() {
     {
         if let Err(pkg_config_error) = pkg_config::Config::new()
             // the earliest version tested, it may work with elder versions
-            .range_version("1.14.0".."3.0.0")
+            .range_version("2.0.0".."3.0.0")
             .probe("ceres")
         {
             dbg!(pkg_config_error);

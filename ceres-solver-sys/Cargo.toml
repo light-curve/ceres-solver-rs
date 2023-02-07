@@ -10,8 +10,9 @@ rust-version = "1.57.0"
 
 [features]
 # No features means system, source overrides it
+v2_1 = []
 system = ["pkg-config"]
-source = ["ceres-solver-src"]
+source = ["ceres-solver-src", "v2_1"]
 default = ["system"]
 
 [dependencies.ceres-solver-src]
