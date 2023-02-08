@@ -303,7 +303,7 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
             }
             for (i, &lb) in lower_bounds.iter().enumerate() {
                 if let Some(lb) = lb {
-                    nlls_parameters[i].with_lower_bounds(vec![Some(lb)]);
+                    nlls_parameters[i].set_lower_bounds(vec![Some(lb)]);
                 }
             }
         }

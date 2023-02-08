@@ -15,8 +15,6 @@
 //! // parameters vector consists of vector parameters, here we have a single 1-D parameter.
 //! let true_parameters = vec![vec![2.0]];
 //! let initial_parameters = vec![vec![0.0]];
-//! // This must be equal to initial_parameters.iter().map(|v| v.len()).collect();
-//! let parameter_sizes = [1];
 //!
 //! // You can skip type annotations in the closure definition, we use them for verbosity only.
 //! let cost: CostFunctionType = Box::new(

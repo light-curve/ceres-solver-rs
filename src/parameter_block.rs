@@ -28,7 +28,7 @@ impl ParameterBlock {
     }
 
     /// Add lower bounds to the parameter vector. [None] means no lower bound.
-    pub fn with_lower_bounds(&mut self, lower_bounds: impl Into<Vec<Option<f64>>>) -> &mut Self {
+    pub fn set_lower_bounds(&mut self, lower_bounds: impl Into<Vec<Option<f64>>>) -> &mut Self {
         let lower_bounds = lower_bounds.into();
         assert_eq!(lower_bounds.len(), self.len());
         self.lower_bounds = Some(lower_bounds);
@@ -36,7 +36,7 @@ impl ParameterBlock {
     }
 
     /// Add upper bounds to the parameter vector. [None] means no upper bound.
-    pub fn with_upper_bounds(&mut self, upper_bounds: impl Into<Vec<Option<f64>>>) -> &mut Self {
+    pub fn set_upper_bounds(&mut self, upper_bounds: impl Into<Vec<Option<f64>>>) -> &mut Self {
         let upper_bounds = upper_bounds.into();
         assert_eq!(upper_bounds.len(), self.len());
         self.upper_bounds = Some(upper_bounds);
@@ -44,17 +44,17 @@ impl ParameterBlock {
     }
 
     /// Add lower bounds to the parameter vector.
-    pub fn with_all_lower_bounds(&mut self, lower_bounds: impl Into<Vec<f64>>) -> &mut Self {
+    pub fn set_all_lower_bounds(&mut self, lower_bounds: impl Into<Vec<f64>>) -> &mut Self {
         let lower_bounds = lower_bounds.into();
         assert_eq!(lower_bounds.len(), self.len());
-        self.with_lower_bounds(lower_bounds.into_iter().map(Some).collect::<Vec<_>>())
+        self.set_lower_bounds(lower_bounds.into_iter().map(Some).collect::<Vec<_>>())
     }
 
     /// Add upper bounds to the parameter vector.
-    pub fn with_all_upper_bounds(&mut self, upper_bounds: impl Into<Vec<f64>>) -> &mut Self {
+    pub fn set_all_upper_bounds(&mut self, upper_bounds: impl Into<Vec<f64>>) -> &mut Self {
         let upper_bounds = upper_bounds.into();
         assert_eq!(upper_bounds.len(), self.len());
-        self.with_upper_bounds(upper_bounds.into_iter().map(Some).collect::<Vec<_>>())
+        self.set_upper_bounds(upper_bounds.into_iter().map(Some).collect::<Vec<_>>())
     }
 
     /// Number of parameters.

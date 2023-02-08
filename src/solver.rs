@@ -34,7 +34,7 @@ pub struct SolverOptionsBuilder(pub(crate) UniquePtr<ffi::SolverOptions>);
 
 impl SolverOptionsBuilder {
     pub fn new() -> Self {
-        let mut slf = Self(ffi::new_solver_options());
+        let slf = Self(ffi::new_solver_options());
         // Remove annoying output from ceres
         slf.logging_type(LoggingType::SILENT)
     }
