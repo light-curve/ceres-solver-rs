@@ -36,7 +36,129 @@
 //! problem. The only difference that now we can re-use parameter blocks used in the previous
 //! residual blocks, adding them by their indexes. Once we are done, we can call
 //! [NllsProblem::solve] which consumes the problem, solves it and returns [NllsProblemSolution]
-//! which contains the solution and summary of the solver run.
+//! which contains the solution and summary of the solver run. It returns an error if the problem
+//! has no residual blocks.
+//!
+//! # Examples
+//!
+//! Let's solve a problem of fitting a family of functions `y_ij = a + b_i * exp(c_i * x_ij)`:
+//! all of them have the same offset `a`, but different scale parameters `b_i` and `c_i`,
+//! `i in 0..=k-1` for `k` (`N_CURVES` bellow) different sets of data.
+//!
+//! ```rust
+//! use ceres_solver::parameter_block::ParameterBlockOrIndex;
+//! use ceres_solver::{CostFunctionType, NllsProblem, SolverOptions};
+//!
+//! // Get parameters, x, y and return tuple of function value and its derivatives
+//! fn target_function(parameters: &[f64; 3], x: f64) -> (f64, [f64; 3]) {
+//!     let [a, b, c] = parameters;
+//!     let y = a + b * f64::exp(c * x);
+//!     let dy_da = 1.0;
+//!     let dy_db = f64::exp(c * x);
+//!     let dy_dc = b * x * f64::exp(c * x);
+//!     (y, [dy_da, dy_db, dy_dc])
+//! }
+//!
+//! const N_OBS_PER_CURVE: usize = 100;
+//! const N_CURVES: usize = 3;
+//!
+//! // True parameters
+//! let a_true = -2.0;
+//! let b_true: [_; N_CURVES] = [2.0, 2.0, -1.0];
+//! let c_true: [_; N_CURVES] = [3.0, -1.0, 3.0];
+//!
+//! // Initial parameter guesses
+//! let a_init = 0.0;
+//! let b_init = 1.0;
+//! let c_init = 1.0;
+//!
+//! // Generate data
+//! let x = vec![
+//!     (0..N_OBS_PER_CURVE)
+//!         .map(|i| (i as f64) / (N_OBS_PER_CURVE as f64))
+//!         .collect::<Vec<_>>();
+//!     3
+//! ];
+//! let y: Vec<Vec<_>> = x
+//!     .iter()
+//!     .zip(b_true.iter().zip(c_true.iter()))
+//!     .map(|(x, (&b, &c))| {
+//!         x.iter()
+//!             .map(|&x| {
+//!                 let (y, _) = target_function(&[a_true, b, c], x);
+//!                 // True value + "noise"
+//!                 y + 0.001 + f64::sin(1e6 * x)
+//!             })
+//!             .collect()
+//!     })
+//!     .collect();
+//!
+//! // Build the problem
+//! let mut problem = NllsProblem::new();
+//! for (i, (x, y)) in x.into_iter().zip(y.into_iter()).enumerate() {
+//!     let cost: CostFunctionType = Box::new(
+//!         move |parameters: &[&[f64]],
+//!               residuals: &mut [f64],
+//!               mut jacobians: Option<&mut [Option<&mut [&mut [f64]]>]>| {
+//!             assert_eq!(parameters.len(), 3);
+//!             let a = parameters[0][0];
+//!             let b = parameters[1][0];
+//!             let c = parameters[2][0];
+//!             // Number of residuls equal to the number of observations
+//!             assert_eq!(residuals.len(), N_OBS_PER_CURVE);
+//!             for (j, (&x, &y)) in x.iter().zip(y.iter()).enumerate() {
+//!                 let (y_model, derivatives) = target_function(&[a, b, c], x);
+//!                 residuals[j] = y - y_model;
+//!                 // jacobians can be None, then you don't need to provide them
+//!                 if let Some(jacobians) = jacobians.as_mut() {
+//!                     // The size of the jacobians array is equal to the number of parameters,
+//!                     // each element is Option<&mut [&mut [f64]]>
+//!                     for (mut jacobian, &derivative) in jacobians.iter_mut().zip(&derivatives) {
+//!                         if let Some(jacobian) = &mut jacobian {
+//!                             // Each element in the jacobians array is slice of slices:
+//!                             // the first index is for different residuals components,
+//!                             // the second index is for different components of the parameter vector
+//!                             jacobian[j][0] = -derivative;
+//!                         }
+//!                     }
+//!                 }
+//!             }
+//!             true
+//!         },
+//!     );
+//!     let a_parameter: ParameterBlockOrIndex = if i == 0 {
+//!         vec![c_init].into()
+//!     } else {
+//!         0.into()
+//!     };
+//!     problem = problem
+//!         .residual_block_builder()
+//!         .set_cost(cost, N_OBS_PER_CURVE)
+//!         .add_parameter(a_parameter)
+//!         .add_parameter(vec![b_init])
+//!         .add_parameter(vec![c_init])
+//!         .build_into_problem()
+//!         .unwrap()
+//!         .0;
+//! }
+//!
+//! // Solve the problem
+//! let solution = problem.solve(&SolverOptions::default()).unwrap();
+//! println!("Brief summary: {:?}", solution.summary);
+//! // Getting parameter values
+//! let a = solution.parameters[0][0];
+//! assert!((a - a_true).abs() < 0.03);
+//! let (b, c): (Vec<_>, Vec<_>) = solution.parameters[1..]
+//!     .chunks(2)
+//!     .map(|sl| (sl[0][0], sl[1][0]))
+//!     .unzip();
+//! for (b, &b_true) in b.iter().zip(b_true.iter()) {
+//!     assert!((b - b_true).abs() < 0.03);
+//! }
+//! for (c, &c_true) in c.iter().zip(c_true.iter()) {
+//!     assert!((c - c_true).abs() < 0.03);
+//! }
+//! ```
 
 use crate::cost::CostFunction;
 use crate::cost::CostFunctionType;

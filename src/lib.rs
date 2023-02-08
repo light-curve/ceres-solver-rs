@@ -2,8 +2,8 @@
 //! ## Safe Rust bindings for [Ceres Solver](http://ceres-solver.org)
 //!
 //! Solve large and small non-linear optimization problems in Rust.
-//! See [nlls_problem::NllsProblem] for general non-linear least squares problem and
-//! [curve_fit::CurveFitProblem1D] for a multiparametric 1-D curve fitting.
+//! See [NllsProblem] for general non-linear least squares problem and
+//! [CurveFitProblem1D] for a multiparametric 1-D curve fitting.
 //!
 //! # Examples
 //!
@@ -58,6 +58,8 @@
 //! // The solution is a vector of parameter vectors, here we have a single 1-D parameter.
 //! assert!(f64::abs(solution.parameters[0][0] - true_parameters[0][0]) < 1e-8);
 //! ```
+//!
+//! See more details and examples in [nlls_problem] module documentation.
 //!
 //! We also provide a lighter interface for 1-D multiparameter curve fit problems via
 //! [CurveFitProblem1D]. Let's generate data points and fit them for a quadratic function.
@@ -122,6 +124,8 @@
 //!     assert!(f64::abs(true_value - actual_value) < 0.1);
 //! }
 //! ```
+//!
+//! See another example in [curve_fit::CurveFitProblem1DBuilder]'s documentation.
 
 pub use cost::CostFunctionType;
 pub use curve_fit::{CurveFitProblem1D, CurveFunctionType};
