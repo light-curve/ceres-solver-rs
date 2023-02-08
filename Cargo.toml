@@ -16,9 +16,10 @@ members = [
 ]
 
 [features]
-# No features means system, source overrides it
+# v2.1 introduced some breaking changes
 v2_1 = ["ceres-solver-sys/v2_1"]
 system = ["ceres-solver-sys/system"]
+# "source" overrides "system"
 source = ["ceres-solver-sys/source"]
 default = ["system"]
 

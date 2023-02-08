@@ -159,6 +159,16 @@ impl ParameterBlockStorage {
         &self.storage
     }
 
+    #[inline]
+    pub fn get_block(&self, index: usize) -> Result<&ParameterBlock, ParameterBlockStorageError> {
+        self.storage
+            .get(index)
+            .ok_or(ParameterBlockStorageError::IndexOutOfBounds {
+                index,
+                len: self.storage.len(),
+            })
+    }
+
     pub fn to_values(self) -> Vec<Vec<f64>> {
         self.storage.into_iter().map(|p| p.to_values()).collect()
     }

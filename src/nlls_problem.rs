@@ -162,7 +162,7 @@
 
 use crate::cost::CostFunction;
 use crate::cost::CostFunctionType;
-use crate::error::{NllsProblemError, ResidualBlockBuildingError};
+use crate::error::{NllsProblemError, ParameterBlockStorageError, ResidualBlockBuildingError};
 use crate::loss::LossFunction;
 use crate::parameter_block::{ParameterBlockOrIndex, ParameterBlockStorage};
 use crate::residual_block::{ResidualBlock, ResidualBlockId};
@@ -201,6 +201,56 @@ impl<'cost> NllsProblem<'cost> {
         }
     }
 
+    #[inline]
+    fn inner(&self) -> &ffi::Problem<'cost> {
+        self.inner
+            .as_ref()
+            .expect("Underlying C++ unique_ptr<Problem> must hold non-null pointer")
+    }
+
+    #[inline]
+    fn inner_mut(&mut self) -> Pin<&mut ffi::Problem<'cost>> {
+        self.inner
+            .as_mut()
+            .expect("Underlying C++ unique_ptr<Problem> must hold non-null pointer")
+    }
+
+    /// Set parameter block to be constant during the optimization. Parameter block must be already
+    /// added to the problem, otherwise [ParameterBlockStorageError] returned.
+    pub fn set_parameter_block_constant(
+        &mut self,
+        block_index: usize,
+    ) -> Result<(), ParameterBlockStorageError> {
+        let block_pointer = self.parameter_storage.get_block(block_index)?.pointer_mut();
+        unsafe {
+            self.inner_mut().SetParameterBlockConstant(block_pointer);
+        }
+        Ok(())
+    }
+
+    /// Set parameter block to be variable during the optimization. Parameter block must be already
+    /// added to the problem, otherwise [ParameterBlockStorageError] returned.
+    pub fn set_parameter_block_variable(
+        &mut self,
+        block_index: usize,
+    ) -> Result<(), ParameterBlockStorageError> {
+        let block_pointer = self.parameter_storage.get_block(block_index)?.pointer_mut();
+        unsafe {
+            self.inner_mut().SetParameterBlockVariable(block_pointer);
+        }
+        Ok(())
+    }
+
+    /// Check if parameter block is constant. Parameter block must be already added to the problem,
+    /// otherwise [ParameterBlockStorageError] returned.
+    pub fn is_parameter_block_constant(
+        &self,
+        block_index: usize,
+    ) -> Result<bool, ParameterBlockStorageError> {
+        let block_pointer = self.parameter_storage.get_block(block_index)?.pointer_mut();
+        unsafe { Ok(self.inner().IsParameterBlockConstant(block_pointer)) }
+    }
+
     /// Solve the problem.
     pub fn solve(
         mut self,
@@ -215,9 +265,7 @@ impl<'cost> NllsProblem<'cost> {
                 .0
                 .as_ref()
                 .expect("Underlying C++ SolverOptions must hold non-null pointer"),
-            self.inner
-                .as_mut()
-                .expect("Underlying C++ unique_ptr<Problem> must hold non-null pointer"),
+            self.inner_mut(),
             summary
                 .0
                 .as_mut()
@@ -320,11 +368,13 @@ impl<'cost> ResidualBlockBuilder<'cost> {
         let parameter_indices = problem.parameter_storage.extend(parameters)?;
         let parameter_sizes: Vec<_> = parameter_indices
             .iter()
+            // At this point we know that all parameter indices are valid.
             .map(|&index| problem.parameter_storage.blocks()[index].len())
             .collect();
         let parameter_pointers: Pin<Vec<_>> = Pin::new(
             parameter_indices
                 .iter()
+                // At this point we know that all parameter indices are valid.
                 .map(|&index| problem.parameter_storage.blocks()[index].pointer_mut())
                 .collect(),
         );

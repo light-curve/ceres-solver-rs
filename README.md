@@ -30,7 +30,7 @@ Current implementation of the binding is not complete.
 The following list shows the status of the binding support:
 
 - Non-linear Least squares
-  - [x] `Problem` - basic class for NLLS
+  - [x] `Problem` - basic class for NLLS, supports adding residual blocks, setting boundary conditions, setting parameter block constant/variable, and solving the problem
   - [x] `CostFunction` - user provides both residual and Jacobian
   - [ ] `SizedCostFunction` - same but with the residual vector shape is known at compile time
   - [ ] `AutoDiffCostFunction` - user provides residual and Jacobian is computed by automatic differentiation
