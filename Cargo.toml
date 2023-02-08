@@ -23,7 +23,7 @@ source = ["ceres-solver-sys/source"]
 default = ["system"]
 
 [dependencies.ceres-solver-sys]
-version = "0.2.0-alpha.0"
+version = "0.2.0-beta.0"
 path = "./ceres-solver-sys"
 
 [dependencies.thiserror]
