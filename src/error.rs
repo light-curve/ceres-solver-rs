@@ -43,3 +43,10 @@ pub enum CurveFitProblemBuildError {
     #[error("Upper boundary size doesn't match the number of parameters")]
     UpperBoundarySizeMismatch,
 }
+
+/// Error for [crate::nlls_problem::NllsProblem].
+#[derive(Debug, Error)]
+pub enum NllsProblemError {
+    #[error("No residual blocks added to the problem")]
+    NoResidualBlocks,
+}

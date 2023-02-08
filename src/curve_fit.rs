@@ -54,7 +54,7 @@ impl<'cost> CurveFitProblem1D<'cost> {
     ) -> Self {
         assert_eq!(x.len(), y.len());
         let nlls_parameters: Vec<_> = parameters.iter().map(|&x| vec![x]).collect();
-        let (problem, _block_id) = NllsProblem::new_empty()
+        let (problem, _block_id) = NllsProblem::new()
             .residual_block_builder()
             .set_cost(Self::cost_function(x, y, None, func.into()), x.len())
             .set_parameters(nlls_parameters)
@@ -110,11 +110,11 @@ impl<'cost> CurveFitProblem1D<'cost> {
 
     /// Solves the problem and returns a solution for the parameters.
     pub fn solve(self, options: &SolverOptions) -> CurveFitProblemSolution {
-        // We know that we have well-defined problem
+        // We know that we have well-defined problem, so we can unwrap
         let NllsProblemSolution {
             parameters: nlls_parameters,
             summary,
-        } = self.0.solve(options);
+        } = self.0.solve(options).unwrap();
         // All parameters are 1D - compress to a single vector
         let parameters = nlls_parameters.into_iter().map(|x| x[0]).collect();
         CurveFitProblemSolution {
@@ -308,7 +308,7 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
             }
         }
         // TODO: upper bounds
-        let mut residual_block = NllsProblem::new_empty().residual_block_builder().set_cost(
+        let mut residual_block = NllsProblem::new().residual_block_builder().set_cost(
             CurveFitProblem1D::cost_function(x, y, self.inverse_error, func),
             n_obs,
         );

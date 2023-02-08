@@ -2,43 +2,34 @@
 //!
 //! The diagram shows the lifecycle of a [NllsProblem]:
 //! ```text
-//!    x                             x
-//!    │EmptyNllsProblem::new()      │NllsProblem::new_empty()
-//!    │                             │
-//! ┌──▼─────────────┐               │
-//! │EmptyNllsProblem│◄──────────────┘
-//! └──┬─────────────┘
-//!    │  .residual_block_builder(self)
-//! ┌──▼─────────────────┐
-//! │ResidualBlockBuilder│◄──────────────────────────┐
-//! └──▲─┬───────────────┘                           │
-//!    │ │.set_cost(self, func, num_residuals)       │
-//!    └─┤                                           │
-//!    ▲ │                                           │
-//!    └─┤.set_loss(self, loss)                      │
-//!      │                                           │
-//!    ▲ │                                           │
-//!    └─┤.set_parameters(self, parameters)          │
-//!      │                                           │
-//!      │.build_into_problem(self)                  │
-//!      │                                           │
-//! ┌────▼──────┐     .residual_block_builder(self)  │
-//! │NllsProblem├────────────────────────────────────┘
-//! └────┬──────┘
-//!      │.solve(self)
-//! ┌────▼──────────────┐
-//! │NllsProblemSolution│
-//! └───────────────────┘
+//!        x
+//!        │ NllsProblem::new()
+//!        │
+//!     ┌──▼────────┐ .solve(self, options) ┌───────────────────┐
+//! ┌──►│NllsProblem├──────────────────────►│NllsProblemSolution│
+//! │   └──┬────────┘                       └───────────────────┘
+//! │      │  .residual_block_builder(self)
+//! │   ┌──▼─────────────────┐
+//! │   │ResidualBlockBuilder│
+//! │   └──▲─┬───────────────┘
+//! │      │ │.set_cost(self, func, num_residuals)
+//! │      └─┤
+//! │      ▲ │
+//! │      └─┤.set_loss(self, loss)
+//! │        │
+//! │      ▲ │
+//! │      └─┤.set_parameters(self,
+//! │        │
+//! └────────┘.build_into_problem(self)
 //! ```
-//! <!-- https://asciiflow.com/#/share/eJy9VEtqwzAQvYrQKgZj0i5K62Wg21DarcDYjgKmYyno09qE7HqE4t4j65ymJ6n8a40TfyE1Y3nMaOY9PTSzx8yPKXaZBrAx%2BCkV2MV7ghOC3Zvl8s4mODXu7f2D8RRNlPkhGCGUoL4nIYSZz%2Ffn6THeqXQNIJ8ED4DGrsvo%2B8Iqt5n4eeg3tRfBxM1Gs1aWnf78Iesq1eaa7%2F76GF%2B3zWliYn1qR1AZbbQPXgA8fPUCHcGGioWksLVmH%2Fqc5XMFs8pRViXIjCNPliU7zisyeBsqAc3rSKq8kEtViGajrWahjZiOvVpbaV1IHcTpxs2Og1e2m3JpBWngUlakc9caSB5ulGsT3vnCjBBFRU37SoQL1yl6wYuY4mU7jE2cjNi%2Bfh2tVmT0NmyjYGu0%2FK%2BNn0xNvSWHN3ph8vSK0k%2BhocILB60izibR66yOD%2FjwAwApMzg%3D) -->
+//! <!-- https://asciiflow.com/#/share/eJytU1tqg0AU3cpwvyKIpPlq%2FcwCSml%2FB0TNDUivM2EerSFkF8WF5LN0NV1JR502NRpbSIajnEHuOXfOHXcg0hIhFpYoBEq3qCCGHYeKQ3wzny9CDltHF7d3jhmsjNtwYN2qOBeefr59sHsi%2FaBkRljGscDXWdD77jeOedTvRz4Ai7SkF5xppHXI5MYUUuiATVT8B66HE%2F9fTV%2BofUb1SZJtmv9x72UwCTa%2BrpLBcWwsUqiLlU0pyUjmz0lmC1qhaqMPRnquLzV270dvuWwcl53heEL14TrHdE%2Bk0SS51MbfqrUVeciELZPvBHRwUjaiVR%2FYUL5Da0BSa2%2FQ0J4iG5T%2BpbZJlftDDSqveUZtAlE7z6QQRvqRwh72XxPrJEg%3D) -->
 //!
-//! We start with [EmptyNllsProblem] which has no residual blocks and cannot be solved. All we can
-//! do with it is adding a new residual block. This is done by calling
-//! [EmptyNllsProblem::residual_block_builder] destructive method which consumes the problem and
-//! returns a [ResidualBlockBuilder] which can be used to build a new residual block. Here we add
-//! mandatory cost function [crate::cost::CostFunctionType] and parameter blocks
-//! [crate::parameter_block::ParameterBlock]. We can also set optional loss function
-//! [crate::loss::LossFunction]. Once we are done, we call
+//! We start with [NllsProblem] with no residual blocks and cannot be solved. Next we should add a
+//! residual block by calling [NllsProblem::residual_block_builder] which is a destructive method
+//! which consumes the problem and returns a [ResidualBlockBuilder] which can be used to build a new
+//! residual block. Here we add mandatory cost function [crate::cost::CostFunctionType] and
+//! parameter blocks [crate::parameter_block::ParameterBlock]. We can also set optional loss
+//! function [crate::loss::LossFunction]. Once we are done, we call
 //! [ResidualBlockBuilder::build_into_problem] which returns previously consumed [NllsProblem].
 //! Now we can optionally add more residual blocks repeating the process: call
 //! [NllsProblem::residual_block_builder] consuming [NllsProblem], add what we need and rebuild the
@@ -49,7 +40,7 @@
 
 use crate::cost::CostFunction;
 use crate::cost::CostFunctionType;
-use crate::error::ResidualBlockBuildingError;
+use crate::error::{NllsProblemError, ResidualBlockBuildingError};
 use crate::loss::LossFunction;
 use crate::parameter_block::{ParameterBlockOrIndex, ParameterBlockStorage};
 use crate::residual_block::{ResidualBlock, ResidualBlockId};
@@ -70,8 +61,12 @@ pub struct NllsProblem<'cost> {
 
 impl<'cost> NllsProblem<'cost> {
     /// Crate a new non-linear least squares problem with no residual blocks.
-    pub fn new_empty() -> EmptyNllsProblem<'cost> {
-        EmptyNllsProblem::new()
+    pub fn new() -> Self {
+        Self {
+            inner: ffi::new_problem(),
+            parameter_storage: ParameterBlockStorage::new(),
+            residual_blocks: Vec::new(),
+        }
     }
 
     /// Capture this problem into a builder for a new residual block.
@@ -85,7 +80,13 @@ impl<'cost> NllsProblem<'cost> {
     }
 
     /// Solve the problem.
-    pub fn solve(mut self, options: &SolverOptions) -> NllsProblemSolution {
+    pub fn solve(
+        mut self,
+        options: &SolverOptions,
+    ) -> Result<NllsProblemSolution, NllsProblemError> {
+        if self.residual_blocks.is_empty() {
+            return Err(NllsProblemError::NoResidualBlocks);
+        }
         let mut summary = SolverSummary::new();
         ffi::solve(
             options
@@ -100,10 +101,16 @@ impl<'cost> NllsProblem<'cost> {
                 .as_mut()
                 .expect("Underlying C++ unique_ptr<SolverSummary> must hold non-null pointer"),
         );
-        NllsProblemSolution {
+        Ok(NllsProblemSolution {
             parameters: self.parameter_storage.to_values(),
             summary,
-        }
+        })
+    }
+}
+
+impl<'cost> Default for NllsProblem<'cost> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -113,36 +120,6 @@ pub struct NllsProblemSolution {
     pub parameters: Vec<Vec<f64>>,
     /// Summary of the solver run.
     pub summary: SolverSummary,
-}
-
-/// Non-Linear Least Squares problem with no residual blocks. Add a residual block with
-/// [EmptyNllsProblem::residual_block_builder] to make it a [NllsProblem] which can be solved.
-pub struct EmptyNllsProblem<'cost> {
-    problem: NllsProblem<'cost>,
-}
-
-impl<'cost> EmptyNllsProblem<'cost> {
-    /// Crate a new non-linear least squares problem with no residual blocks.
-    pub fn new() -> Self {
-        Self {
-            problem: NllsProblem {
-                inner: ffi::new_problem(),
-                parameter_storage: ParameterBlockStorage::new(),
-                residual_blocks: Vec::new(),
-            },
-        }
-    }
-
-    /// Capture this problem into a builder for a new residual block.
-    pub fn residual_block_builder(self) -> ResidualBlockBuilder<'cost> {
-        self.problem.residual_block_builder()
-    }
-}
-
-impl<'cost> Default for EmptyNllsProblem<'cost> {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 /// Builder for a new residual block. It captures [NllsProblem] and returns it back with
@@ -477,7 +454,7 @@ mod tests {
         let NllsProblemSolution {
             parameters: solution,
             summary,
-        } = NllsProblem::new_empty()
+        } = NllsProblem::new()
             .residual_block_builder()
             .set_cost(cost, NUM_OBSERVATIONS)
             .set_parameters(initial_guess)
@@ -485,7 +462,8 @@ mod tests {
             .build_into_problem()
             .unwrap()
             .0
-            .solve(&SolverOptions::default());
+            .solve(&SolverOptions::default())
+            .unwrap();
 
         assert!(summary.is_solution_usable());
         println!("{}", summary.full_report());

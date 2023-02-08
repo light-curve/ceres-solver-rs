@@ -40,7 +40,7 @@
 //!     },
 //! );
 //!
-//! let solution = NllsProblem::new_empty()
+//! let solution = NllsProblem::new()
 //!     .residual_block_builder() // create a builder for residual block
 //!     .set_cost(cost, 1) // 1 is the number of residuals
 //!     .set_parameters(initial_parameters)
@@ -49,7 +49,8 @@
 //!     .0 // build_into_problem returns a tuple (NllsProblem, ResidualBlockId)
 //!     // You can repeat .residual_block_builder() and .build_into_problem() calls to add more
 //!     // residual blocks
-//!     .solve(&SolverOptions::default()); // SolverOptions can be customized
+//!     .solve(&SolverOptions::default()) // SolverOptions can be customized
+//!     .unwrap(); // Err should happen only if we added no residual blocks
 //!
 //! // Print the full solver report
 //! println!("{}", solution.summary.full_report());
