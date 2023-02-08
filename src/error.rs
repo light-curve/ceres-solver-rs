@@ -42,6 +42,8 @@ pub enum CurveFitProblemBuildError {
     LowerBoundarySizeMismatch,
     #[error("Upper boundary size doesn't match the number of parameters")]
     UpperBoundarySizeMismatch,
+    #[error("Constant parameter index is out of bounds: {0}")]
+    ParameterBlockStorageError(#[from] ParameterBlockStorageError),
 }
 
 /// Error for [crate::nlls_problem::NllsProblem].

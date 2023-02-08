@@ -134,7 +134,11 @@ pub struct CurveFitProblemSolution {
 
 /// Builder for [CurveFitProblem1D].
 ///
-/// # Example
+/// # Examples
+///
+/// ## Loss function and data point errors
+///
+/// Fit linear function `y = a * x + b` to the data points:
 ///
 /// ```rust
 /// use ceres_solver::curve_fit::{CurveFitProblem1D, CurveFunctionType};
@@ -190,6 +194,84 @@ pub struct CurveFitProblemSolution {
 /// assert!(f64::abs(a - solution.parameters[0]) < 1e-8);
 /// assert!(f64::abs(b - solution.parameters[1]) < 1e-8);
 /// ```
+///
+/// ## Constant parameters
+///
+/// Sometimes it is useful to fix some parameters and optimize only the rest. Let's consider the
+/// curve `y = a * x^k + b` and compare two cases: when `k` is unity and when it is optimized.
+///
+/// ```rust
+/// use ceres_solver::curve_fit::{CurveFitProblem1D, CurveFunctionType};
+/// use ceres_solver::SolverOptions;
+/// use ceres_solver_sys::cxx::S;
+///
+/// fn model(
+///     x: f64,
+///     parameters: &[f64],
+///     y: &mut f64,
+///     jacobians: Option<&mut [Option<f64>]>,
+/// ) -> bool {
+///     let &[k, a, b]: &[f64; 3] = parameters.try_into().unwrap();
+///     *y = a * x.powf(k) + b;
+///     if let Some(jacobians) = jacobians {
+///         let [d_dk, d_da, d_db]: &mut [Option<f64>; 3] = jacobians.try_into().unwrap();
+///         if let Some(d_dk) = d_dk {
+///             *d_dk = a * x.powf(k) * x.ln();
+///         }
+///         if let Some(d_da) = d_da {
+///             *d_da = x.powf(k);
+///         }
+///         if let Some(d_db) = d_db {
+///             *d_db = 1.0;
+///         }
+///     }
+///     true
+/// }
+///
+/// let true_a = 3.0;
+/// let true_b = -2.0;
+/// let true_k = 2.0;
+/// let fixed_k = 1.0;
+/// assert_ne!(true_a, fixed_k);
+///
+/// // Generate data
+/// let x: Vec<_> = (1..101).map(|i| i as f64 / 100.0).collect();
+/// let y: Vec<_> = x
+///     .iter()
+///     .map(|&x| {
+///         let mut y = 0.0;
+///         model(x, &[true_k, true_a, true_b], &mut y, None);
+///         y
+///     })
+///     .collect();
+///
+/// let func: CurveFunctionType = Box::new(model);
+/// let solution_variable_k = CurveFitProblem1D::builder()
+///     .func(func)
+///     .parameters(&[1.0, 1.0, 1.0])
+///     .x(&x)
+///     .y(&y)
+///     .build()
+///     .unwrap()
+///     .solve(&SolverOptions::default());
+/// assert!((true_k - solution_variable_k.parameters[0]).abs() < 1e-8);
+/// assert!((true_a - solution_variable_k.parameters[1]).abs() < 1e-8);
+/// assert!((true_b - solution_variable_k.parameters[2]).abs() < 1e-8);
+///
+/// let func: CurveFunctionType = Box::new(model);
+/// let solution_fixed_k_1 = CurveFitProblem1D::builder()
+///     .func(func)
+///     .parameters(&[fixed_k, 1.0, 1.0])
+///     .constant(&[0]) // indexes of the fixed parameters
+///     .x(&x)
+///     .y(&y)
+///     .build()
+///     .unwrap()
+///     .solve(&SolverOptions::default());
+/// assert!((fixed_k - solution_fixed_k_1.parameters[0]).abs() < 1e-8);
+///
+/// assert!(solution_variable_k.summary.final_cost() < solution_fixed_k_1.summary.final_cost());
+/// ```
 pub struct CurveFitProblem1DBuilder<'cost, 'param> {
     /// Model function
     pub func: Option<CurveFunctionType>,
@@ -205,6 +287,8 @@ pub struct CurveFitProblem1DBuilder<'cost, 'param> {
     pub lower_bounds: Option<&'param [Option<f64>]>,
     /// Optional upper bounds for parameters
     pub upper_bounds: Option<&'param [Option<f64>]>,
+    /// Constant parameters, they will not be optimized.
+    pub constant_parameters: Option<&'param [usize]>,
     /// Optional loss function
     pub loss: Option<LossFunction>,
 }
@@ -219,6 +303,7 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
             parameters: None,
             lower_bounds: None,
             upper_bounds: None,
+            constant_parameters: None,
             loss: None,
         }
     }
@@ -270,6 +355,12 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
         self
     }
 
+    /// Make parameters constant, i.e. they will not be fitted.
+    pub fn constant(mut self, indexes: &'param [usize]) -> Self {
+        self.constant_parameters = Some(indexes);
+        self
+    }
+
     /// Add optional loss function, if not given the trivial loss is assumed.
     pub fn loss(mut self, loss: LossFunction) -> Self {
         self.loss = Some(loss);
@@ -315,10 +406,15 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
         if let Some(loss) = self.loss {
             residual_block = residual_block.set_loss(loss);
         }
-        let (problem, _block_id) = residual_block
+        let (mut problem, _block_id) = residual_block
             .set_parameters(nlls_parameters)
             .build_into_problem()
             .unwrap();
+        if let Some(indexes) = self.constant_parameters {
+            for &i_param in indexes {
+                problem.set_parameter_block_constant(i_param)?;
+            }
+        }
         Ok(CurveFitProblem1D(problem))
     }
 }

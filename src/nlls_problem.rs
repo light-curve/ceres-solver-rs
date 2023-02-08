@@ -179,64 +179,63 @@
 //! const UPPER_Y: f64 = 3.5;
 //!
 //! fn solve_himmelblau(initial_x: f64, initial_y: f64) -> (f64, f64) {
+//!     let x_block = {
+//!         let mut block = ParameterBlock::new(vec![initial_x]);
+//!         block.set_all_lower_bounds(vec![LOWER_X]);
+//!         block.set_all_upper_bounds(vec![UPPER_X]);
+//!         block
+//!     };
+//!     let y_block = {
+//!         let mut block = ParameterBlock::new(vec![initial_y]);
+//!         block.set_all_lower_bounds(vec![LOWER_Y]);
+//!         block.set_all_upper_bounds(vec![UPPER_Y]);
+//!         block
+//!     };
 //!
-//! let x_block = {
-//!     let mut block = ParameterBlock::new(vec![initial_x]);
-//!     block.set_all_lower_bounds(vec![LOWER_X]);
-//!     block.set_all_upper_bounds(vec![UPPER_X]);
-//!     block
-//! };
-//! let y_block = {
-//!     let mut block = ParameterBlock::new(vec![initial_y]);
-//!     block.set_all_lower_bounds(vec![LOWER_Y]);
-//!     block.set_all_upper_bounds(vec![UPPER_Y]);
-//!     block
-//! };
-//!
-//! // You can skip type annotations in the closure definition, we use them for verbosity only.
-//! let cost: CostFunctionType = Box::new(
-//!     move |parameters: &[&[f64]],
-//!           residuals: &mut [f64],
-//!           mut jacobians: Option<&mut [Option<&mut [&mut [f64]]>]>| {
-//!         let x = parameters[0][0];
-//!         let y = parameters[1][0];
-//!         // residuals have the size of your data set, in our case it is two
-//!         residuals[0] = x.powi(2) + y - 11.0;
-//!         residuals[1] = x + y.powi(2) - 7.0;
-//!         // jacobians can be None, then you don't need to provide them
-//!         if let Some(jacobians) = jacobians {
-//!             // The size of the jacobians array is equal to the number of parameters,
-//!             // each element is Option<&mut [&mut [f64]]>
-//!             if let Some(d_dx) = &mut jacobians[0] {
-//!                 // Each element in the jacobians array is slice of slices:
-//!                 // the first index is for different residuals components,
-//!                 // the second index is for different components of the parameter vector
-//!                 d_dx[0][0] = 2.0 * x;
-//!                 d_dx[1][0] = 1.0;
+//!     // You can skip type annotations in the closure definition, we use them for verbosity only.
+//!     let cost: CostFunctionType = Box::new(
+//!         move |parameters: &[&[f64]],
+//!               residuals: &mut [f64],
+//!               mut jacobians: Option<&mut [Option<&mut [&mut [f64]]>]>| {
+//!             let x = parameters[0][0];
+//!             let y = parameters[1][0];
+//!             // residuals have the size of your data set, in our case it is two
+//!             residuals[0] = x.powi(2) + y - 11.0;
+//!             residuals[1] = x + y.powi(2) - 7.0;
+//!             // jacobians can be None, then you don't need to provide them
+//!             if let Some(jacobians) = jacobians {
+//!                 // The size of the jacobians array is equal to the number of parameters,
+//!                 // each element is Option<&mut [&mut [f64]]>
+//!                 if let Some(d_dx) = &mut jacobians[0] {
+//!                     // Each element in the jacobians array is slice of slices:
+//!                     // the first index is for different residuals components,
+//!                     // the second index is for different components of the parameter vector
+//!                     d_dx[0][0] = 2.0 * x;
+//!                     d_dx[1][0] = 1.0;
+//!                 }
+//!                 if let Some(d_dy) = &mut jacobians[1] {
+//!                     d_dy[0][0] = 1.0;
+//!                     d_dy[1][0] = 2.0 * y;
+//!                 }
 //!             }
-//!             if let Some(d_dy) = &mut jacobians[1] {
-//!                 d_dy[0][0] = 1.0;
-//!                 d_dy[1][0] = 2.0 * y;
-//!             }
-//!         }
-//!         true
-//!     },
-//! );
+//!             true
+//!         },
+//!     );
 //!
-//! let solution = NllsProblem::new()
-//!     .residual_block_builder() // create a builder for residual block
-//!     .set_cost(cost, 2) // 2 is the number of residuals
-//!     .set_parameters([x_block, y_block])
-//!     .build_into_problem()
-//!     .unwrap()
-//!     .0 // build_into_problem returns a tuple (NllsProblem, ResidualBlockId)
-//!     .solve(&SolverOptions::default()) // SolverOptions can be customized
-//!     .unwrap(); // Err should happen only if we added no residual blocks
+//!     let solution = NllsProblem::new()
+//!         .residual_block_builder() // create a builder for residual block
+//!         .set_cost(cost, 2) // 2 is the number of residuals
+//!         .set_parameters([x_block, y_block])
+//!         .build_into_problem()
+//!         .unwrap()
+//!         .0 // build_into_problem returns a tuple (NllsProblem, ResidualBlockId)
+//!         .solve(&SolverOptions::default()) // SolverOptions can be customized
+//!         .unwrap(); // Err should happen only if we added no residual blocks
 //!
-//! // Print the full solver report
-//! println!("{}", solution.summary.full_report());
+//!     // Print the full solver report
+//!     println!("{}", solution.summary.full_report());
 //!
-//! (solution.parameters[0][0], solution.parameters[1][0])
+//!     (solution.parameters[0][0], solution.parameters[1][0])
 //! }
 //!
 //! // The solver converges to the corner of the boundary rectangle.
