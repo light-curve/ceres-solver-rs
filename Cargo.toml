@@ -1,6 +1,6 @@
 [package]
 name = "ceres-solver"
-version = "0.1.2"
+version = "0.2.0-beta.0"
 edition = "2021"
 readme = "README.md"
 description = "Safe Rust bindings for the Ceres Solver"
