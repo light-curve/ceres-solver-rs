@@ -1,9 +1,20 @@
 //! Error enums.
 
 use std::fmt::Debug;
-use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error(transparent)]
+    ResidualBlockBuildingError(#[from] ResidualBlockBuildingError),
+    #[error(transparent)]
+    SolverOptionsBuildingError(#[from] SolverOptionsBuildingError),
+    #[error(transparent)]
+    CurveFitProblemBuildError(#[from] CurveFitProblemBuildError),
+    #[error(transparent)]
+    NllsProblemError(#[from] NllsProblemError),
+}
+
+#[derive(Debug, thiserror::Error)]
 pub enum ResidualBlockBuildingError {
     #[error("No cost function set for residual block")]
     MissingCost,
@@ -13,20 +24,20 @@ pub enum ResidualBlockBuildingError {
     ParameterBlockStorageError(#[from] ParameterBlockStorageError),
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum ParameterBlockStorageError {
     #[error("Index of ParameterBlock out of bounds: {index} >= {len}")]
     IndexOutOfBounds { index: usize, len: usize },
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum SolverOptionsBuildingError {
     #[error("SolverOptions is invalid: {0}")]
     Invalid(String),
 }
 
 /// Error for [crate::curve_fit::CurveFitProblem1DBuilder].
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum CurveFitProblemBuildError {
     #[error("Data arrays x, y, or inverse_error have different lengths")]
     DataSizesDontMatch,
@@ -47,7 +58,7 @@ pub enum CurveFitProblemBuildError {
 }
 
 /// Error for [crate::nlls_problem::NllsProblem].
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum NllsProblemError {
     #[error("No residual blocks added to the problem")]
     NoResidualBlocks,
