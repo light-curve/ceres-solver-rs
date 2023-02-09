@@ -10,12 +10,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `LossFunction::tukey()`.
+- `solver` module with customizable `SolverOptions` and `SolverSummary` containing the solution statistics.
+- Reusing of the parameter blocks in the residual blocks.
+- Make parameter block constant if you don't need to vary it.
+- Boundary conditions for the parameter blocks.
+- More documentation and examples.
 
 ### Changed
 
-- `ceres-solver-sys` is updated to `0.2` which gives access to more APIs of the C++ interface.
+- **breaking** `ceres-solver-sys` is updated to `0.2` which gives access to more APIs of the C++ interface. It caused a lot of breaking changes in the `ceres-solver` crate in many ways.
+- `CostFunction` is not public anymore, `CostFunctionType` is the only thing you need to know about.
 - `LossFunction` is changed from `enum` to an opaque `struct`.
 - `LossFunction::tolerant_loss()` -> `LossFunction::tolerant()`.
+- `parameters` module renamed into `parameter_block` and provides a different interface now.
+- Residual blocks are now built from `NllsProblem` and capture it until the builder releases the problem back adding the residual block to it.
+- Solution of the both problem is via `::solve(self, options: &SolverOptions)` now and returns structures with the parameters and the summary.
+- More error types, they all use `thiserror` now.
+- Many more changes.
 
 ### Deprecated
 
@@ -24,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `loss::CustomLossFunction` and `loss::StockLossFunction`.
+- Some more things.
 
 ### Fixed
 
