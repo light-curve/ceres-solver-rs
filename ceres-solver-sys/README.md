@@ -13,5 +13,4 @@ The minimal tested version of Ceres Solver is 2.0
 - `system` (default) links a system copy of the Ceres Solver library. By default, it would be a synamic library, but you can tweak it with `pkg-config`
 - `source` (optional) overrides `system` and links a static library file built by `ceres-solver-src` crate, it is also applies `v2_1` feature flag, because `ceres-solver-src` crate builds Ceres Solver 2.2 from source
 
-Since this crate uses `bindgen` it requires `libclang` as build dependency.
-For `system` feature it also required `pkg-config` to discover the library.
+`system` feature requires `pkg-config` system dependency, while `source` requires `ceres-solver-src` build dependencies such as CMake and C++17 compatible compiler.
