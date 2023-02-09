@@ -6,11 +6,12 @@
 ![Crates.io](https://img.shields.io/crates/v/ceres-solver-sys)
 
 Currently, we bind C API only using [`bindgen`](https://rust-lang.github.io/rust-bindgen/).
-The minimal tested version of Ceres Solver is 1.14.0
+The minimal tested version of Ceres Solver is 2.0
 
 ### Cargo feature flags
+- `v2_1` wraps Ceres Solver 2.1 API, which added CUDA support
 - `system` (default) links a system copy of the Ceres Solver library. By default, it would be a synamic library, but you can tweak it with `pkg-config`
-- `source` (optional) overrides `system` and links a static library file built by `ceres-solver-src` crate
+- `source` (optional) overrides `system` and links a static library file built by `ceres-solver-src` crate, it is also applies `v2_1` feature flag, because `ceres-solver-src` crate builds Ceres Solver 2.2 from source
 
 Since this crate uses `bindgen` it requires `libclang` as build dependency.
 For `system` feature it also required `pkg-config` to discover the library.

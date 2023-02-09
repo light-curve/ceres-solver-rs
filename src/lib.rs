@@ -2,21 +2,19 @@
 //! ## Safe Rust bindings for [Ceres Solver](http://ceres-solver.org)
 //!
 //! Solve large and small non-linear optimization problems in Rust.
-//! See [nlls_problem::NllsProblem] for general non-linear least squares problem and
-//! [curve_fit::CurveFitProblem1D] for a multiparametric 1-D curve fitting.
+//! See [NllsProblem] for general non-linear least squares problem and
+//! [CurveFitProblem1D] for a multiparametric 1-D curve fitting.
 //!
 //! # Examples
 //!
 //! Let's solve min[(x - 2)^2] problem
 //!
 //! ```rust
-//! use ceres_solver::{CostFunction, CostFunctionType, NllsProblem, ResidualBlock};
+//! use ceres_solver::{CostFunctionType, NllsProblem, SolverOptions};
 //!
 //! // parameters vector consists of vector parameters, here we have a single 1-D parameter.
 //! let true_parameters = vec![vec![2.0]];
 //! let initial_parameters = vec![vec![0.0]];
-//! // This must be equal to initial_parameters.iter().map(|v| v.len()).collect();
-//! let parameter_sizes = [1];
 //!
 //! // You can skip type annotations in the closure definition, we use them for verbosity only.
 //! let cost: CostFunctionType = Box::new(
@@ -39,26 +37,33 @@
 //!         true
 //!     },
 //! );
-//! // 1 is the number of residuals.
-//! let cost_function = CostFunction::new(cost, parameter_sizes, 1);
 //!
-//! let mut problem = NllsProblem::new();
+//! let solution = NllsProblem::new()
+//!     .residual_block_builder() // create a builder for residual block
+//!     .set_cost(cost, 1) // 1 is the number of residuals
+//!     .set_parameters(initial_parameters)
+//!     .build_into_problem()
+//!     .unwrap()
+//!     .0 // build_into_problem returns a tuple (NllsProblem, ResidualBlockId)
+//!     // You can repeat .residual_block_builder() and .build_into_problem() calls to add more
+//!     // residual blocks
+//!     .solve(&SolverOptions::default()) // SolverOptions can be customized
+//!     .unwrap(); // Err should happen only if we added no residual blocks
 //!
-//! // There could be many residual blocks, each has its own parameters.
-//! problem
-//!     .add_residual_block(ResidualBlock::new(initial_parameters, cost_function))
-//!     .unwrap();
-//! // solution is a vector of parameters, one per residual block. Type annotation is not needed.
-//! let solution: Vec<Vec<Vec<f64>>> = problem.solve().unwrap();
+//! // Print the full solver report
+//! println!("{}", solution.summary.full_report());
 //!
-//! assert!(f64::abs(solution[0][0][0] - true_parameters[0][0]) < 1e-8);
+//! // The solution is a vector of parameter vectors, here we have a single 1-D parameter.
+//! assert!(f64::abs(solution.parameters[0][0] - true_parameters[0][0]) < 1e-8);
 //! ```
+//!
+//! See more details and examples in [nlls_problem] module documentation.
 //!
 //! We also provide a lighter interface for 1-D multiparameter curve fit problems via
 //! [CurveFitProblem1D]. Let's generate data points and fit them for a quadratic function.
 //!
 //! ```rust
-//! use ceres_solver::{CurveFitProblem1D, CurveFunctionType};
+//! use ceres_solver::{CurveFitProblem1D, CurveFunctionType, SolverOptions};
 //!
 //! // A model to use for the cost function.
 //! fn model(
@@ -101,28 +106,38 @@
 //! // Wrap the model to be a cost function.
 //! let cost: CurveFunctionType = Box::new(model);
 //!
-//! // Solve it!
+//! // Create and solve the problem.
 //! let initial_guess = [0.0, 0.0, 0.0];
-//! let solution = CurveFitProblem1D::new(cost, &x, &y, &initial_guess, None).to_solution();
+//! let solution =
+//!     CurveFitProblem1D::new(cost, &x, &y, &initial_guess).solve(&SolverOptions::default());
+//!
+//! // Print the brief report
+//! print!("{:?}", solution.summary);
 //!
 //! // Check the results.
-//! for (true_value, actual_value) in true_parameters.into_iter().zip(solution.into_iter()) {
+//! for (true_value, actual_value) in true_parameters
+//!     .into_iter()
+//!     .zip(solution.parameters.into_iter())
+//! {
 //!     assert!(f64::abs(true_value - actual_value) < 0.1);
 //! }
 //! ```
+//!
+//! See another example in [curve_fit::CurveFitProblem1DBuilder]'s documentation.
 
-pub use cost::{CostFunction, CostFunctionType};
+pub use cost::CostFunctionType;
 pub use curve_fit::{CurveFitProblem1D, CurveFunctionType};
 pub use loss::{LossFunction, LossFunctionType};
 pub use nlls_problem::NllsProblem;
-pub use parameters::Parameters;
-pub use residual_block::ResidualBlock;
+pub use parameter_block::{ParameterBlock, ParameterBlockOrIndex};
+pub use solver::SolverOptions;
 
 pub mod cost;
 pub mod curve_fit;
 pub mod error;
 pub mod loss;
 pub mod nlls_problem;
-pub mod parameters;
+pub mod parameter_block;
 pub mod residual_block;
+pub mod solver;
 pub mod types;

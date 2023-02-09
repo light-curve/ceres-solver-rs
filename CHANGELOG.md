@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
---
+- `LossFunction::tukey()`.
 
 ### Changed
 
---
+- `ceres-solver-sys` is updated to `0.2` which gives access to more APIs of the C++ interface.
+- `LossFunction` is changed from `enum` to an opaque `struct`.
+- `LossFunction::tolerant_loss()` -> `LossFunction::tolerant()`.
 
 ### Deprecated
 
@@ -21,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
---
+- `loss::CustomLossFunction` and `loss::StockLossFunction`.
 
 ### Fixed
 

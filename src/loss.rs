@@ -1,21 +1,21 @@
-use ceres_solver_sys as sys;
-use std::os::raw::c_void;
-use std::pin::Pin;
-use std::slice;
+//! Loss functions for [NllsProblem](crate::nlls_problem::NllsProblem) and
+//! [CurveFitProblem1D](crate::curve_fit::CurveFitProblem1D).
+//!
+//! Loss function is a function applied to a squared norm of the problem, it could help in reducing
+//! outliers data for better convergence. There are two types of them: ones built from custom
+//! functions boxed into [LossFunctionType] and Ceres stock functions having one or two
+//! scale parameters.
+
+use ceres_solver_sys::cxx::UniquePtr;
+use ceres_solver_sys::ffi;
 
 pub type LossFunctionType = Box<dyn Fn(f64, &mut [f64; 3])>;
 
-/// Loss function for [ResidualBlock](crate::residual_block::ResidualBlock) and
+/// Loss function for [NllsProblem](crate::nlls_problem::NllsProblem) and
 /// [CurveFitProblem1D](crate::curve_fit::CurveFitProblem1D), it is a transformation of the squared
 /// residuals which is generally used to make the solver less sensitive to outliers. This enum has
 /// two flavours: user specified function and Ceres stock function.
-pub enum LossFunction {
-    /// User-specified loss function.
-    Custom(CustomLossFunction),
-    /// One of the loss functions specified by Ceres, see
-    /// [Ceres Solver docs for details](http://ceres-solver.org/nnls_modeling.html#instances).
-    Stock(StockLossFunction),
-}
+pub struct LossFunction(UniquePtr<ffi::LossFunction>);
 
 impl LossFunction {
     /// Create a [LossFunction] to handle a custom loss function.
@@ -26,114 +26,46 @@ impl LossFunction {
     /// details at
     /// <http://ceres-solver.org/nnls_modeling.html#_CPPv4N5ceres12LossFunctionE>.
     pub fn custom(func: impl Into<LossFunctionType>) -> Self {
-        let func: LossFunctionType = func.into();
-        Self::Custom(CustomLossFunction {
-            func: Box::pin(func),
-        })
+        let safe_func = func.into();
+        let rust_func: Box<dyn Fn(f64, *mut f64)> = Box::new(move |sq_norm, out_ptr| {
+            let out = unsafe { &mut *(out_ptr as *mut [f64; 3]) };
+            safe_func(sq_norm, out);
+        });
+        let inner = ffi::new_callback_loss_function(Box::new(rust_func.into()));
+        Self(inner)
     }
 
     /// Huber loss function, see details at <http://ceres-solver.org/nnls_modeling.html#_CPPv4N5ceres9HuberLossE>.
     pub fn huber(a: f64) -> Self {
-        let stock = StockLossFunction {
-            inner: unsafe { sys::ceres_create_huber_loss_function_data(a) },
-            name: "Huber",
-        };
-        Self::Stock(stock)
+        Self(ffi::new_huber_loss(a))
     }
 
     /// Soft L1 loss function, see details at <http://ceres-solver.org/nnls_modeling.html#_CPPv4N5ceres12SoftLOneLossE>.
     pub fn soft_l1(a: f64) -> Self {
-        let stock = StockLossFunction {
-            inner: unsafe { sys::ceres_create_softl1_loss_function_data(a) },
-            name: "SoftLOne",
-        };
-        Self::Stock(stock)
+        Self(ffi::new_soft_l_one_loss(a))
     }
 
     /// log(1+s) loss function, see details at <http://ceres-solver.org/nnls_modeling.html#_CPPv4N5ceres10CauchyLossE>.
     pub fn cauchy(a: f64) -> Self {
-        let stock = StockLossFunction {
-            inner: unsafe { sys::ceres_create_cauchy_loss_function_data(a) },
-            name: "Cauchy",
-        };
-        Self::Stock(stock)
+        Self(ffi::new_cauchy_loss(a))
     }
 
     /// Arctangent loss function, see details at <http://ceres-solver.org/nnls_modeling.html#_CPPv4N5ceres10ArctanLossE>.
     pub fn arctan(a: f64) -> Self {
-        let stock = StockLossFunction {
-            inner: unsafe { sys::ceres_create_arctan_loss_function_data(a) },
-            name: "Arctan",
-        };
-        Self::Stock(stock)
+        Self(ffi::new_arctan_loss(a))
     }
 
     /// Tolerant loss function, see details at <http://ceres-solver.org/nnls_modeling.html#_CPPv4N5ceres12TolerantLossE>.
-    pub fn tolerant_loss(a: f64, b: f64) -> Self {
-        let stock = StockLossFunction {
-            inner: unsafe { sys::ceres_create_tolerant_loss_function_data(a, b) },
-            name: "TolerantLoss",
-        };
-        Self::Stock(stock)
+    pub fn tolerant(a: f64, b: f64) -> Self {
+        Self(ffi::new_tolerant_loss(a, b))
     }
 
-    /// Calls the underlying loss function.
-    #[inline]
-    pub fn loss(&self, squared_norm: f64, out: &mut [f64; 3]) {
-        match self {
-            Self::Custom(custom) => (custom.func)(squared_norm, out),
-            Self::Stock(stock) => stock.loss(squared_norm, out),
-        }
+    /// Tukey loss function
+    pub fn tukey(a: f64) -> Self {
+        Self(ffi::new_tukey_loss(a))
     }
 
-    pub(crate) fn ffi_function(&self) -> unsafe extern "C" fn(*mut c_void, f64, *mut f64) {
-        match self {
-            Self::Stock(_) => sys::ceres_stock_loss_function,
-            Self::Custom(_) => ffi_custom_loss_function,
-        }
+    pub fn into_inner(self) -> UniquePtr<ffi::LossFunction> {
+        self.0
     }
-
-    pub(crate) fn ffi_user_data(&mut self) -> *mut c_void {
-        match self {
-            Self::Custom(custom) => {
-                Pin::into_inner(custom.func.as_mut()) as *mut LossFunctionType as *mut c_void
-            }
-            Self::Stock(stock) => stock.inner,
-        }
-    }
-}
-
-/// Custom loss function. Create it with [LossFunction::custom]
-pub struct CustomLossFunction {
-    pub func: Pin<Box<LossFunctionType>>,
-}
-
-/// Stock loss function. Create it with one of the [LossFunction]'s constructors.
-pub struct StockLossFunction {
-    inner: *mut c_void,
-    pub name: &'static str,
-}
-
-impl StockLossFunction {
-    #[inline]
-    fn loss(&self, squared_norm: f64, out: &mut [f64; 3]) {
-        unsafe { sys::ceres_stock_loss_function(self.inner, squared_norm, out.as_mut_ptr()) }
-    }
-}
-
-impl Drop for StockLossFunction {
-    fn drop(&mut self) {
-        unsafe { sys::ceres_free_stock_loss_function_data(self.inner) }
-    }
-}
-
-#[no_mangle]
-unsafe extern "C" fn ffi_custom_loss_function(
-    user_data: *mut c_void,
-    squared_norm: f64,
-    out: *mut f64,
-) {
-    let func = (user_data as *mut LossFunctionType).as_ref().unwrap();
-    let out = slice::from_raw_parts_mut(out, 3).try_into().unwrap();
-    (func)(squared_norm, out)
 }

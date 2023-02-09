@@ -1,148 +1,538 @@
-use crate::error::Error;
-use crate::residual_block::ResidualBlock;
+//! Non-Linear Least Squares problem builder and solver.
+//!
+//! The diagram shows the lifecycle of a [NllsProblem]:
+//! ```text
+//!        x
+//!        │ NllsProblem::new()
+//!        │
+//!     ┌──▼────────┐ .solve(self, options) ┌───────────────────┐
+//! ┌──►│NllsProblem├──────────────────────►│NllsProblemSolution│
+//! │   └──┬────────┘                       └───────────────────┘
+//! │      │  .residual_block_builder(self)
+//! │   ┌──▼─────────────────┐
+//! │   │ResidualBlockBuilder│
+//! │   └──▲─┬───────────────┘
+//! │      │ │.set_cost(self, func, num_residuals)
+//! │      └─┤
+//! │      ▲ │
+//! │      └─┤.set_loss(self, loss)
+//! │        │
+//! │      ▲ │
+//! │      └─┤.set_parameters(self,
+//! │        │
+//! └────────┘.build_into_problem(self)
+//! ```
+//! <!-- https://asciiflow.com/#/share/eJytU1tqg0AU3cpwvyKIpPlq%2FcwCSml%2FB0TNDUivM2EerSFkF8WF5LN0NV1JR502NRpbSIajnEHuOXfOHXcg0hIhFpYoBEq3qCCGHYeKQ3wzny9CDltHF7d3jhmsjNtwYN2qOBeefr59sHsi%2FaBkRljGscDXWdD77jeOedTvRz4Ai7SkF5xppHXI5MYUUuiATVT8B66HE%2F9fTV%2BofUb1SZJtmv9x72UwCTa%2BrpLBcWwsUqiLlU0pyUjmz0lmC1qhaqMPRnquLzV270dvuWwcl53heEL14TrHdE%2Bk0SS51MbfqrUVeciELZPvBHRwUjaiVR%2FYUL5Da0BSa2%2FQ0J4iG5T%2BpbZJlftDDSqveUZtAlE7z6QQRvqRwh72XxPrJEg%3D) -->
+//!
+//! We start with [NllsProblem] with no residual blocks and cannot be solved. Next we should add a
+//! residual block by calling [NllsProblem::residual_block_builder] which is a destructive method
+//! which consumes the problem and returns a [ResidualBlockBuilder] which can be used to build a new
+//! residual block. Here we add mandatory cost function [crate::cost::CostFunctionType] and
+//! parameter blocks [crate::parameter_block::ParameterBlock]. We can also set optional loss
+//! function [crate::loss::LossFunction]. Once we are done, we call
+//! [ResidualBlockBuilder::build_into_problem] which returns previously consumed [NllsProblem].
+//! Now we can optionally add more residual blocks repeating the process: call
+//! [NllsProblem::residual_block_builder] consuming [NllsProblem], add what we need and rebuild the
+//! problem. The only difference that now we can re-use parameter blocks used in the previous
+//! residual blocks, adding them by their indexes. Once we are done, we can call
+//! [NllsProblem::solve] which consumes the problem, solves it and returns [NllsProblemSolution]
+//! which contains the solution and summary of the solver run. It returns an error if the problem
+//! has no residual blocks.
+//!
+//! # Examples
+//!
+//! ## Multiple residual blocks with shared parameters
+//!
+//! Let's solve a problem of fitting a family of functions `y_ij = a + b_i * exp(c_i * x_ij)`:
+//! all of them have the same offset `a`, but different scale parameters `b_i` and `c_i`,
+//! `i in 0..=k-1` for `k` (`N_CURVES` bellow) different sets of data.
+//!
+//! ```rust
+//! use ceres_solver::parameter_block::ParameterBlockOrIndex;
+//! use ceres_solver::{CostFunctionType, NllsProblem, SolverOptions};
+//!
+//! // Get parameters, x, y and return tuple of function value and its derivatives
+//! fn target_function(parameters: &[f64; 3], x: f64) -> (f64, [f64; 3]) {
+//!     let [a, b, c] = parameters;
+//!     let y = a + b * f64::exp(c * x);
+//!     let dy_da = 1.0;
+//!     let dy_db = f64::exp(c * x);
+//!     let dy_dc = b * x * f64::exp(c * x);
+//!     (y, [dy_da, dy_db, dy_dc])
+//! }
+//!
+//! const N_OBS_PER_CURVE: usize = 100;
+//! const N_CURVES: usize = 3;
+//!
+//! // True parameters
+//! let a_true = -2.0;
+//! let b_true: [_; N_CURVES] = [2.0, 2.0, -1.0];
+//! let c_true: [_; N_CURVES] = [3.0, -1.0, 3.0];
+//!
+//! // Initial parameter guesses
+//! let a_init = 0.0;
+//! let b_init = 1.0;
+//! let c_init = 1.0;
+//!
+//! // Generate data
+//! let x = vec![
+//!     (0..N_OBS_PER_CURVE)
+//!         .map(|i| (i as f64) / (N_OBS_PER_CURVE as f64))
+//!         .collect::<Vec<_>>();
+//!     3
+//! ];
+//! let y: Vec<Vec<_>> = x
+//!     .iter()
+//!     .zip(b_true.iter().zip(c_true.iter()))
+//!     .map(|(x, (&b, &c))| {
+//!         x.iter()
+//!             .map(|&x| {
+//!                 let (y, _) = target_function(&[a_true, b, c], x);
+//!                 // True value + "noise"
+//!                 y + 0.001 + f64::sin(1e6 * x)
+//!             })
+//!             .collect()
+//!     })
+//!     .collect();
+//!
+//! // Build the problem
+//! let mut problem = NllsProblem::new();
+//! for (i, (x, y)) in x.into_iter().zip(y.into_iter()).enumerate() {
+//!     let cost: CostFunctionType = Box::new(
+//!         move |parameters: &[&[f64]],
+//!               residuals: &mut [f64],
+//!               mut jacobians: Option<&mut [Option<&mut [&mut [f64]]>]>| {
+//!             assert_eq!(parameters.len(), 3);
+//!             let a = parameters[0][0];
+//!             let b = parameters[1][0];
+//!             let c = parameters[2][0];
+//!             // Number of residuls equal to the number of observations
+//!             assert_eq!(residuals.len(), N_OBS_PER_CURVE);
+//!             for (j, (&x, &y)) in x.iter().zip(y.iter()).enumerate() {
+//!                 let (y_model, derivatives) = target_function(&[a, b, c], x);
+//!                 residuals[j] = y - y_model;
+//!                 // jacobians can be None, then you don't need to provide them
+//!                 if let Some(jacobians) = jacobians.as_mut() {
+//!                     // The size of the jacobians array is equal to the number of parameters,
+//!                     // each element is Option<&mut [&mut [f64]]>
+//!                     for (mut jacobian, &derivative) in jacobians.iter_mut().zip(&derivatives) {
+//!                         if let Some(jacobian) = &mut jacobian {
+//!                             // Each element in the jacobians array is slice of slices:
+//!                             // the first index is for different residuals components,
+//!                             // the second index is for different components of the parameter vector
+//!                             jacobian[j][0] = -derivative;
+//!                         }
+//!                     }
+//!                 }
+//!             }
+//!             true
+//!         },
+//!     );
+//!     let a_parameter: ParameterBlockOrIndex = if i == 0 {
+//!         vec![c_init].into()
+//!     } else {
+//!         0.into()
+//!     };
+//!     problem = problem
+//!         .residual_block_builder()
+//!         .set_cost(cost, N_OBS_PER_CURVE)
+//!         .add_parameter(a_parameter)
+//!         .add_parameter(vec![b_init])
+//!         .add_parameter(vec![c_init])
+//!         .build_into_problem()
+//!         .unwrap()
+//!         .0;
+//! }
+//!
+//! // Solve the problem
+//! let solution = problem.solve(&SolverOptions::default()).unwrap();
+//! println!("Brief summary: {:?}", solution.summary);
+//! // Getting parameter values
+//! let a = solution.parameters[0][0];
+//! assert!((a - a_true).abs() < 0.03);
+//! let (b, c): (Vec<_>, Vec<_>) = solution.parameters[1..]
+//!     .chunks(2)
+//!     .map(|sl| (sl[0][0], sl[1][0]))
+//!     .unzip();
+//! for (b, &b_true) in b.iter().zip(b_true.iter()) {
+//!     assert!((b - b_true).abs() < 0.03);
+//! }
+//! for (c, &c_true) in c.iter().zip(c_true.iter()) {
+//!     assert!((c - c_true).abs() < 0.03);
+//! }
+//! ```
+//!
+//! ## Parameter constraints
+//!
+//! Let's find a minimum of the Himmelblau's function:
+//! `f(x, y) = (x^2 + y - 11)^2 + (x + y^2 - 7)^2` with boundaries `x ∈ [0; 3.5], y ∈ [-1.8; 3.5]`
+//! and initial guess `x = 3.45, y = -1.8`. This function have four global minima, all having the
+//! the same value `f(x, y) = 0`, one of them is within the boundaries and another one is just
+//! outside of them, near the initial guess. The solver converges to the corner of the boundary.
+//!
+//! ```rust
+//! use ceres_solver::{CostFunctionType, NllsProblem, ParameterBlock, SolverOptions};
+//!
+//! const LOWER_X: f64 = 0.0;
+//! const UPPER_X: f64 = 3.5;
+//! const LOWER_Y: f64 = -1.8;
+//! const UPPER_Y: f64 = 3.5;
+//!
+//! fn solve_himmelblau(initial_x: f64, initial_y: f64) -> (f64, f64) {
+//!     let x_block = {
+//!         let mut block = ParameterBlock::new(vec![initial_x]);
+//!         block.set_all_lower_bounds(vec![LOWER_X]);
+//!         block.set_all_upper_bounds(vec![UPPER_X]);
+//!         block
+//!     };
+//!     let y_block = {
+//!         let mut block = ParameterBlock::new(vec![initial_y]);
+//!         block.set_all_lower_bounds(vec![LOWER_Y]);
+//!         block.set_all_upper_bounds(vec![UPPER_Y]);
+//!         block
+//!     };
+//!
+//!     // You can skip type annotations in the closure definition, we use them for verbosity only.
+//!     let cost: CostFunctionType = Box::new(
+//!         move |parameters: &[&[f64]],
+//!               residuals: &mut [f64],
+//!               mut jacobians: Option<&mut [Option<&mut [&mut [f64]]>]>| {
+//!             let x = parameters[0][0];
+//!             let y = parameters[1][0];
+//!             // residuals have the size of your data set, in our case it is two
+//!             residuals[0] = x.powi(2) + y - 11.0;
+//!             residuals[1] = x + y.powi(2) - 7.0;
+//!             // jacobians can be None, then you don't need to provide them
+//!             if let Some(jacobians) = jacobians {
+//!                 // The size of the jacobians array is equal to the number of parameters,
+//!                 // each element is Option<&mut [&mut [f64]]>
+//!                 if let Some(d_dx) = &mut jacobians[0] {
+//!                     // Each element in the jacobians array is slice of slices:
+//!                     // the first index is for different residuals components,
+//!                     // the second index is for different components of the parameter vector
+//!                     d_dx[0][0] = 2.0 * x;
+//!                     d_dx[1][0] = 1.0;
+//!                 }
+//!                 if let Some(d_dy) = &mut jacobians[1] {
+//!                     d_dy[0][0] = 1.0;
+//!                     d_dy[1][0] = 2.0 * y;
+//!                 }
+//!             }
+//!             true
+//!         },
+//!     );
+//!
+//!     let solution = NllsProblem::new()
+//!         .residual_block_builder() // create a builder for residual block
+//!         .set_cost(cost, 2) // 2 is the number of residuals
+//!         .set_parameters([x_block, y_block])
+//!         .build_into_problem()
+//!         .unwrap()
+//!         .0 // build_into_problem returns a tuple (NllsProblem, ResidualBlockId)
+//!         .solve(&SolverOptions::default()) // SolverOptions can be customized
+//!         .unwrap(); // Err should happen only if we added no residual blocks
+//!
+//!     // Print the full solver report
+//!     println!("{}", solution.summary.full_report());
+//!
+//!     (solution.parameters[0][0], solution.parameters[1][0])
+//! }
+//!
+//! // The solver converges to the corner of the boundary rectangle.
+//! let (x, y) = solve_himmelblau(3.4, -1.0);
+//! assert_eq!(UPPER_X, x);
+//! assert_eq!(LOWER_Y, y);
+//!
+//! // The solver converges to the global minimum inside the boundaries.
+//! let (x, y) = solve_himmelblau(1.0, 1.0);
+//! assert!((3.0 - x).abs() < 1e-8);
+//! assert!((2.0 - y).abs() < 1e-8);
+//! ```
 
-use ceres_solver_sys as sys;
-use std::os::raw::c_int;
+use crate::cost::CostFunction;
+use crate::cost::CostFunctionType;
+use crate::error::{NllsProblemError, ParameterBlockStorageError, ResidualBlockBuildingError};
+use crate::loss::LossFunction;
+use crate::parameter_block::{ParameterBlockOrIndex, ParameterBlockStorage};
+use crate::residual_block::{ResidualBlock, ResidualBlockId};
+use crate::solver::{SolverOptions, SolverSummary};
+
+use ceres_solver_sys::cxx::UniquePtr;
+use ceres_solver_sys::ffi;
+use std::pin::Pin;
 
 /// Non-Linear Least Squares problem.
 ///
-/// You use it in three steps:
-/// - [NllsProblem::new] creates a new empty instance of the problem.
-/// - [NllsProblem::add_residual_block] adds a [ResidualBlock], each with its own parameters,
-/// cost and loss functions.
-/// - [NllsProblem::solve] solves the problem and returns a vector consists of parameters for each
-/// residual block.
-///
-/// [NllsProblem::solve] call invalidates the [NllsProblem] instance, so calling this method twice
-/// would return [Err]. [Err] also is returned if no residual block have been added to the problem.
+/// See [module-level documentation](crate::nlls_problem) building the instance of this type.
 pub struct NllsProblem<'cost> {
-    inner: *mut sys::ceres_problem_t,
-    status: ProblemStatus<'cost>,
-}
-
-/// [NllsProblem]'s internal representation of [ResidualBlock]
-pub struct ProblemBlock<'cost> {
-    // We don't use it, but it may be useful in the future
-    #[allow(dead_code)]
-    id: *mut sys::ceres_residual_block_id_t,
-    residual_block: ResidualBlock<'cost>,
-}
-
-/// [NllsProblem]'s state
-pub enum ProblemStatus<'cost> {
-    /// The problem is blank, at least one residual block must be added via
-    /// [NllsProblem::add_residual_block].
-    Uninitialized,
-    /// The problem is ready for [NllsProblem::solve] call, but you may add more residual blocks
-    /// via [NllsProblem::add_residual_block].
-    Ready { blocks: Vec<ProblemBlock<'cost>> },
-    /// The problem is solved, drop this one and create a new.
-    Solved,
+    inner: UniquePtr<ffi::Problem<'cost>>,
+    parameter_storage: ParameterBlockStorage,
+    residual_blocks: Vec<ResidualBlock>,
 }
 
 impl<'cost> NllsProblem<'cost> {
-    /// A new [NllsProblem] having [ProblemStatus::Uninitialized] state.
+    /// Crate a new non-linear least squares problem with no residual blocks.
     pub fn new() -> Self {
         Self {
-            // Safety: C API
-            inner: unsafe { sys::ceres_create_problem() },
-            status: ProblemStatus::Uninitialized,
+            inner: ffi::new_problem(),
+            parameter_storage: ParameterBlockStorage::new(),
+            residual_blocks: Vec::new(),
         }
     }
 
-    /// Adds a residual block to the problem.
-    ///
-    /// Returns [Err] if [NllsProblem] has [ProblemStatus::Solved] state.
-    pub fn add_residual_block(&mut self, mut block: ResidualBlock<'cost>) -> Result<(), Error> {
-        if matches!(self.status, ProblemStatus::Solved) {
-            return Err(Error::ProblemAlreadySolved);
+    /// Capture this problem into a builder for a new residual block.
+    pub fn residual_block_builder(self) -> ResidualBlockBuilder<'cost> {
+        ResidualBlockBuilder {
+            problem: self,
+            cost: None,
+            loss: None,
+            parameters: Vec::new(),
         }
-        // Safety: C API
-        let id = unsafe {
-            sys::ceres_problem_add_residual_block(
-                self.inner,
-                Some(crate::cost::ffi_cost_function),
-                block.cost_function.cost_function_data(),
-                block.loss_function.as_ref().map(|loss| loss.ffi_function()),
-                block
-                    .loss_function
-                    .as_mut()
-                    .map(|loss| loss.ffi_user_data())
-                    .unwrap_or(std::ptr::null_mut()),
-                block.cost_function.num_residuals() as c_int,
-                block.parameters.len() as c_int,
-                block.parameters.sizes_c_int_mut().as_mut_ptr(),
-                block.parameters.pointers_mut().as_mut_ptr(),
-            )
-        };
-        let block = ProblemBlock {
-            id,
-            residual_block: block,
-        };
-        match &mut self.status {
-            ProblemStatus::Uninitialized => {
-                self.status = ProblemStatus::Ready {
-                    blocks: vec![block],
-                };
-            }
-            ProblemStatus::Ready { blocks } => blocks.push(block),
-            ProblemStatus::Solved => unreachable!(),
-        };
+    }
+
+    #[inline]
+    fn inner(&self) -> &ffi::Problem<'cost> {
+        self.inner
+            .as_ref()
+            .expect("Underlying C++ unique_ptr<Problem> must hold non-null pointer")
+    }
+
+    #[inline]
+    fn inner_mut(&mut self) -> Pin<&mut ffi::Problem<'cost>> {
+        self.inner
+            .as_mut()
+            .expect("Underlying C++ unique_ptr<Problem> must hold non-null pointer")
+    }
+
+    /// Set parameter block to be constant during the optimization. Parameter block must be already
+    /// added to the problem, otherwise [ParameterBlockStorageError] returned.
+    pub fn set_parameter_block_constant(
+        &mut self,
+        block_index: usize,
+    ) -> Result<(), ParameterBlockStorageError> {
+        let block_pointer = self.parameter_storage.get_block(block_index)?.pointer_mut();
+        unsafe {
+            self.inner_mut().SetParameterBlockConstant(block_pointer);
+        }
         Ok(())
     }
 
-    /// Solves the problem and returns a vector of solutions, one per residual block. Returns [Err]
-    /// if problem doesn't have [ProblemStatus::Ready] state.
-    pub fn solve(&mut self) -> Result<Vec<Vec<Vec<f64>>>, Error> {
-        match &mut self.status {
-            ProblemStatus::Uninitialized => Err(Error::ProblemNotReady),
-            ProblemStatus::Ready { blocks } => {
-                // SAFETY: C API
-                unsafe {
-                    sys::ceres_solve(self.inner);
-                }
-                let mut new_blocks = vec![];
-                std::mem::swap(blocks, &mut new_blocks);
-                let solution = new_blocks
-                    .into_iter()
-                    .map(|ProblemBlock { residual_block, .. }| {
-                        residual_block.parameters.to_values()
-                    })
-                    .collect();
-                self.status = ProblemStatus::Solved;
-                Ok(solution)
-            }
-            ProblemStatus::Solved => Err(Error::ProblemAlreadySolved),
+    /// Set parameter block to be variable during the optimization. Parameter block must be already
+    /// added to the problem, otherwise [ParameterBlockStorageError] returned.
+    pub fn set_parameter_block_variable(
+        &mut self,
+        block_index: usize,
+    ) -> Result<(), ParameterBlockStorageError> {
+        let block_pointer = self.parameter_storage.get_block(block_index)?.pointer_mut();
+        unsafe {
+            self.inner_mut().SetParameterBlockVariable(block_pointer);
         }
+        Ok(())
     }
 
-    /// Returns the status of the problem.
-    pub fn status(&self) -> &ProblemStatus {
-        &self.status
+    /// Check if parameter block is constant. Parameter block must be already added to the problem,
+    /// otherwise [ParameterBlockStorageError] returned.
+    pub fn is_parameter_block_constant(
+        &self,
+        block_index: usize,
+    ) -> Result<bool, ParameterBlockStorageError> {
+        let block_pointer = self.parameter_storage.get_block(block_index)?.pointer_mut();
+        unsafe { Ok(self.inner().IsParameterBlockConstant(block_pointer)) }
     }
 
-    /// Returns the number of residual blocks for an unsolved problem, zero otherwise.
-    pub fn num_blocks(&self) -> usize {
-        match &self.status {
-            ProblemStatus::Uninitialized => 0,
-            ProblemStatus::Ready { blocks } => blocks.len(),
-            ProblemStatus::Solved => 0,
+    /// Solve the problem.
+    pub fn solve(
+        mut self,
+        options: &SolverOptions,
+    ) -> Result<NllsProblemSolution, NllsProblemError> {
+        if self.residual_blocks.is_empty() {
+            return Err(NllsProblemError::NoResidualBlocks);
         }
-    }
-}
-
-impl<'cost> Drop for NllsProblem<'cost> {
-    /// Calls C destructor.
-    fn drop(&mut self) {
-        // SAFETY: C API
-        unsafe { sys::ceres_free_problem(self.inner) }
+        let mut summary = SolverSummary::new();
+        ffi::solve(
+            options
+                .0
+                .as_ref()
+                .expect("Underlying C++ SolverOptions must hold non-null pointer"),
+            self.inner_mut(),
+            summary
+                .0
+                .as_mut()
+                .expect("Underlying C++ unique_ptr<SolverSummary> must hold non-null pointer"),
+        );
+        Ok(NllsProblemSolution {
+            parameters: self.parameter_storage.to_values(),
+            summary,
+        })
     }
 }
 
 impl<'cost> Default for NllsProblem<'cost> {
-    /// Returns blank instance.
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Solution of a non-linear least squares problem [NllsProblem].
+pub struct NllsProblemSolution {
+    /// Values of the parameters, in the same order as they were added to the problem.
+    pub parameters: Vec<Vec<f64>>,
+    /// Summary of the solver run.
+    pub summary: SolverSummary,
+}
+
+/// Builder for a new residual block. It captures [NllsProblem] and returns it back with
+/// [ResidualBlockBuilder::build_into_problem] call.
+pub struct ResidualBlockBuilder<'cost> {
+    problem: NllsProblem<'cost>,
+    cost: Option<(CostFunctionType<'cost>, usize)>,
+    loss: Option<LossFunction>,
+    parameters: Vec<ParameterBlockOrIndex>,
+}
+
+impl<'cost> ResidualBlockBuilder<'cost> {
+    /// Set cost function for the residual block.
+    ///
+    /// Arguments:
+    /// * `func` - cost function, see [CostFunction] for details on how to implement it,
+    /// * `num_residuals` - number of residuals, typically the same as the number of experiments.
+    pub fn set_cost(
+        mut self,
+        func: impl Into<CostFunctionType<'cost>>,
+        num_residuals: usize,
+    ) -> Self {
+        self.cost = Some((func.into(), num_residuals));
+        self
+    }
+
+    /// Set loss function for the residual block.
+    pub fn set_loss(mut self, loss: LossFunction) -> Self {
+        self.loss = Some(loss);
+        self
+    }
+
+    /// Set parameters for the residual block.
+    ///
+    /// The argument is an iterator over [ParameterBlockOrIndex] which can be either a new parameter
+    /// block or an index of an existing parameter block.
+    pub fn set_parameters<P>(mut self, parameters: impl IntoIterator<Item = P>) -> Self
+    where
+        P: Into<ParameterBlockOrIndex>,
+    {
+        self.parameters = parameters.into_iter().map(|p| p.into()).collect();
+        self
+    }
+
+    /// Add a new parameter block to the residual block.
+    ///
+    /// The argument is either a new parameter block or an index of an existing parameter block.
+    pub fn add_parameter<P>(mut self, parameter_block: P) -> Self
+    where
+        P: Into<ParameterBlockOrIndex>,
+    {
+        self.parameters.push(parameter_block.into());
+        self
+    }
+
+    /// Build the residual block, add to the problem and return the problem back.
+    ///
+    /// Returns [ResidualBlockBuildingError] if:
+    /// * cost function is not set,
+    /// * no parameters are set,
+    /// * any of the parameters is not a new parameter block or an index of an existing parameter.
+    ///
+    /// Otherwise returns the problem and the residual block id.
+    pub fn build_into_problem(
+        self,
+    ) -> Result<(NllsProblem<'cost>, ResidualBlockId), ResidualBlockBuildingError> {
+        let Self {
+            mut problem,
+            cost,
+            loss,
+            parameters,
+        } = self;
+        if parameters.is_empty() {
+            return Err(ResidualBlockBuildingError::MissingParameters);
+        }
+        let parameter_indices = problem.parameter_storage.extend(parameters)?;
+        let parameter_sizes: Vec<_> = parameter_indices
+            .iter()
+            // At this point we know that all parameter indices are valid.
+            .map(|&index| problem.parameter_storage.blocks()[index].len())
+            .collect();
+        let parameter_pointers: Pin<Vec<_>> = Pin::new(
+            parameter_indices
+                .iter()
+                // At this point we know that all parameter indices are valid.
+                .map(|&index| problem.parameter_storage.blocks()[index].pointer_mut())
+                .collect(),
+        );
+
+        // Create cost function
+        let cost = if let Some((func, num_redisuals)) = cost {
+            CostFunction::new(func, parameter_sizes, num_redisuals)
+        } else {
+            return Err(ResidualBlockBuildingError::MissingCost);
+        };
+
+        // Set residual block
+        let residual_block_id = unsafe {
+            ffi::add_residual_block(
+                problem
+                    .inner
+                    .as_mut()
+                    .expect("Underlying C++ unique_ptr<Problem> must hold non-null pointer"),
+                cost.into_inner(),
+                loss.map(|loss| loss.into_inner())
+                    .unwrap_or_else(UniquePtr::null),
+                parameter_pointers.as_ptr(),
+                parameter_indices.len() as i32,
+            )
+        };
+        problem.residual_blocks.push(ResidualBlock {
+            id: residual_block_id.clone(),
+            parameter_pointers,
+        });
+
+        // Set parameter bounds
+        for &index in parameter_indices.iter() {
+            let block = &problem.parameter_storage.blocks()[index];
+            if let Some(lower_bound) = block.lower_bounds() {
+                for (i, lower_bound) in lower_bound.iter().enumerate() {
+                    if let Some(lower_bound) = lower_bound {
+                        unsafe {
+                            problem
+                                .inner
+                                .as_mut()
+                                .expect(
+                                    "Underlying C++ unique_ptr<Problem> must hold non-null pointer",
+                                )
+                                .SetParameterLowerBound(block.pointer_mut(), i as i32, *lower_bound)
+                        }
+                    }
+                }
+            }
+        }
+        for &index in parameter_indices.iter() {
+            let block = &problem.parameter_storage.blocks()[index];
+            if let Some(upper_bound) = block.upper_bounds() {
+                for (i, upper_bound) in upper_bound.iter().enumerate() {
+                    if let Some(upper_bound) = upper_bound {
+                        unsafe {
+                            problem
+                                .inner
+                                .as_mut()
+                                .expect(
+                                    "Underlying C++ unique_ptr<Problem> must hold non-null pointer",
+                                )
+                                .SetParameterUpperBound(block.pointer_mut(), i as i32, *upper_bound)
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok((problem, residual_block_id))
     }
 }
 
@@ -150,7 +540,7 @@ impl<'cost> Default for NllsProblem<'cost> {
 mod tests {
     use super::*;
 
-    use crate::cost::{CostFunction, CostFunctionType};
+    use crate::cost::CostFunctionType;
     use crate::loss::{LossFunction, LossFunctionType};
 
     use approx::assert_abs_diff_eq;
@@ -301,10 +691,6 @@ mod tests {
         .try_into()
         .unwrap();
 
-        let parameters = vec![vec![0.0], vec![0.0]];
-        let parameter_sizes = [1, 1];
-
-        let mut problem = NllsProblem::new();
         let cost: CostFunctionType = Box::new(move |parameters, residuals, mut jacobians| {
             let m = parameters[0][0];
             let c = parameters[1][0];
@@ -323,14 +709,28 @@ mod tests {
             }
             true
         });
-        let cost_function = CostFunction::new(cost, parameter_sizes, NUM_OBSERVATIONS);
-        problem
-            .add_residual_block(ResidualBlock::new(parameters, cost_function).set_loss(loss))
+
+        let initial_guess = vec![vec![0.0], vec![0.0]];
+
+        let NllsProblemSolution {
+            parameters: solution,
+            summary,
+        } = NllsProblem::new()
+            .residual_block_builder()
+            .set_cost(cost, NUM_OBSERVATIONS)
+            .set_parameters(initial_guess)
+            .set_loss(loss)
+            .build_into_problem()
+            .unwrap()
+            .0
+            .solve(&SolverOptions::default())
             .unwrap();
 
-        let solution = problem.solve().unwrap();
-        let m = solution[0][0][0];
-        let c = solution[0][1][0];
+        assert!(summary.is_solution_usable());
+        println!("{}", summary.full_report());
+
+        let m = solution[0][0];
+        let c = solution[1][0];
 
         assert_abs_diff_eq!(0.3, m, epsilon = 0.02);
         assert_abs_diff_eq!(0.1, c, epsilon = 0.04);

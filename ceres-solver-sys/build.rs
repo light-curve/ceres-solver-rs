@@ -1,17 +1,36 @@
-use std::env;
-use std::path::PathBuf;
-
 fn main() {
-    println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rerun-if-changed=src/lib.h");
+    println!("cargo:rerun-if-changed=src/lib.cpp");
+    println!("cargo:rerun-if-changed=src/lib.rs");
 
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
-    // We don't need to link C++ standard library for Windows MSVC explicitly
-    if target_os == "android" || target_os == "linux" || target_env == "gnu" {
-        println!("cargo:rustc-link-lib=stdc++");
-    } else if target_os == "macos" || target_os == "ios" {
-        println!("cargo:rustc-link-lib=c++");
+    let mut cc_build = cxx_build::bridge("src/lib.rs");
+    cc_build.file("src/lib.cpp");
+    cc_build.flag("-std=c++17");
+    #[cfg(feature = "source")]
+    {
+        cc_build.includes(std::env::split_paths(
+            &std::env::var("DEP_CERES_INCLUDE").unwrap(),
+        ));
     }
+    #[cfg(not(feature = "source"))]
+    {
+        // Helps on Ubuntu
+        #[cfg(target_os = "linux")]
+        {
+            cc_build.include("/usr/include/eigen3");
+        }
+        // Helps on x86_64 macOS with Homebrew
+        #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
+        {
+            cc_build.include("/usr/local/include/eigen3");
+        }
+        // Helps on aarch64 macOS with Homebrew
+        #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+        {
+            cc_build.include("/opt/homebrew/include/eigen3");
+        }
+    }
+    cc_build.compile("ceres-solver-sys");
 
     #[cfg(feature = "source")]
     {
@@ -21,29 +40,11 @@ fn main() {
     {
         if let Err(pkg_config_error) = pkg_config::Config::new()
             // the earliest version tested, it may work with elder versions
-            .range_version("1.14.0".."3.0.0")
+            .range_version("2.0.0".."3.0.0")
             .probe("ceres")
         {
             dbg!(pkg_config_error);
             println!("cargo:rustc-link-lib=ceres");
         }
     }
-
-    let bindings_builder = bindgen::Builder::default()
-        .header("wrapper.h")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks));
-
-    let bindings_builder = if cfg!(feature = "source") {
-        bindings_builder.clang_arg(format!("-I{}", env::var("DEP_CERES_INCLUDE").unwrap()))
-    } else {
-        bindings_builder
-    };
-    let bindings = bindings_builder
-        .generate()
-        .expect("Unable to generate bindings");
-
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    bindings
-        .write_to_file(out_path.join("bindings.rs"))
-        .expect("Couldn't write bindings!");
 }

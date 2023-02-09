@@ -1,6 +1,6 @@
 [package]
 name = "ceres-solver"
-version = "0.1.2"
+version = "0.2.0-beta.1"
 edition = "2021"
 readme = "README.md"
 description = "Safe Rust bindings for the Ceres Solver"
@@ -16,14 +16,19 @@ members = [
 ]
 
 [features]
-# No features means system, source overrides it
+# v2.1 introduced some breaking changes
+v2_1 = ["ceres-solver-sys/v2_1"]
 system = ["ceres-solver-sys/system"]
+# "source" overrides "system"
 source = ["ceres-solver-sys/source"]
 default = ["system"]
 
 [dependencies.ceres-solver-sys]
-version = "0.1.0"
+version = "0.2.0-beta.0"
 path = "./ceres-solver-sys"
+
+[dependencies.thiserror]
+version = "1"
 
 [dev-dependencies]
 approx = "0.5"
