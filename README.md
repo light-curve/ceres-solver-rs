@@ -18,10 +18,10 @@ The earliest Ceres Solver version tested is 2.0, but the bindings may work with 
 
 This project consists of three crates:
 - `ceres-solver` is a safe Rust bindings
-- `ceres-solver-sys` is an unsafe Rust bindings generated with `bindgen`
-- `ceres-solver-src` is an optional no-code crate to build and distribute static Ceres Solver library
+- `ceres-solver-sys` is an unsafe Rust bindings written with the usage of [`cxx`](https://lib.rs/crates/cxx)
+- `ceres-solver-src` is an optional no-code crate to build and distribute a minimal static Ceres Solver library
 
-To build Ceres Solver statically and link it to your project, use `source` Cargo feature, which would add `ceres-solver-src` dependency to your project.
+To build Ceres Solver statically and link it to your project, use `source` Cargo feature, which would add `ceres-solver-src` dependency into your project.
 Another Cargo feature is `v2_1`, which should be used when linked with Ceres Solver 2.1 or newer.
 
 ### Status of the binding support
@@ -30,7 +30,7 @@ Current implementation of the binding is not complete.
 The following list shows the status of the binding support:
 
 - Non-linear Least squares
-  - [x] `Problem` - basic class for NLLS, supports adding residual blocks, setting boundary conditions, setting parameter block constant/variable, and solving the problem
+  - [x] `Problem` - basic class for NLLS, supports adding residual blocks, setting boundary conditions, marking parameter blocks to be constant/variable, and solving the problem
   - [x] `CostFunction` - user provides both residual and Jacobian
   - [ ] `SizedCostFunction` - same but with the residual vector shape is known at compile time
   - [ ] `AutoDiffCostFunction` - user provides residual and Jacobian is computed by automatic differentiation
@@ -43,7 +43,7 @@ The following list shows the status of the binding support:
   - [x] `LossFunction` - a function applied to the squared norm of the residual vector, both custom and Ceres stack loss functions are supported
   - [ ] `Manifold`, `AutoDiffManifold`
   - [ ] `EvaluationCallback`
-- Solver - solver itself is not implemented, but the following nested classes are supported:
+- Solver - `Solver` class itself is not implemented, but the following nested classes are supported:
   - `Solver::Options`
     - [x] Minimizer options
     - [x] Line search options
@@ -63,3 +63,5 @@ The following list shows the status of the binding support:
 - [ ] Jets
 - [ ] Covariance estimation
 - [ ] General unconstrained minimization
+
+Please don't hesitate to create an issue to request prioritization of any functionality that may have been prioritized.
