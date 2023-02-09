@@ -12,7 +12,7 @@ use std::slice;
 pub type CostFunctionType<'a> = Box<dyn Fn(&[&[f64]], &mut [f64], JacobianType<'_>) -> bool + 'a>;
 
 /// A cost function for [NllsProblem](crate::nlls_problem::NllsProblem).
-pub struct CostFunction<'cost>(cxx::UniquePtr<ffi::CallbackCostFunction<'cost>>);
+pub(crate) struct CostFunction<'cost>(cxx::UniquePtr<ffi::CallbackCostFunction<'cost>>);
 
 impl<'cost> CostFunction<'cost> {
     /// Create a new cost function from a Rust function.
