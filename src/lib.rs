@@ -123,7 +123,7 @@
 //! }
 //! ```
 //!
-//! See another example in [curve_fit::CurveFitProblem1DBuilder]'s documentation.
+//! See more examples in [curve_fit::CurveFitProblem1DBuilder]'s documentation.
 
 pub use cost::CostFunctionType;
 pub use curve_fit::{CurveFitProblem1D, CurveFunctionType};

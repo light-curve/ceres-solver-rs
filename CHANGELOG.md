@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+--
+
+### Changed
+
+--
+
+### Deprecated
+
+--
+
+### Removed
+
+--
+
+### Fixed
+
+--
+
+### Security
+
+--
+
+## [0.2.0] 2023-02-11
+
+### Added
+
 - `LossFunction::tukey()`.
 - `solver` module with customizable `SolverOptions` and `SolverSummary` containing the solution statistics.
 - Reusing of the parameter blocks in the residual blocks.
@@ -19,31 +45,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **breaking** `ceres-solver-sys` is updated to `0.2` which gives access to more APIs of the C++ interface. It caused a lot of breaking changes in the `ceres-solver` crate in many ways.
-- `CostFunction` is not public anymore, `CostFunctionType` is the only thing you need to know about.
-- `LossFunction` is changed from `enum` to an opaque `struct`.
-- `LossFunction::tolerant_loss()` -> `LossFunction::tolerant()`.
-- `parameters` module renamed into `parameter_block` and provides a different interface now.
-- Residual blocks are now built from `NllsProblem` and capture it until the builder releases the problem back adding the residual block to it.
-- Solution of the both problem is via `::solve(self, options: &SolverOptions)` now and returns structures with the parameters and the summary.
+- **breaking** `CostFunction` is not public anymore, `CostFunctionType` is the only thing you need to know about.
+- **breaking** `LossFunction` is changed from `enum` to an opaque `struct`.
+- **breaking** `LossFunction::tolerant_loss()` renamed into `LossFunction::tolerant()`.
+- **breaking** `parameters` module renamed into `parameter_block` and provides a different interface now.
+- **breaking** Residual blocks are now built from `NllsProblem` and capture it until the builder releases the problem back adding the residual block to it.
+- **breaking** Solution of the both problem is via `::solve(self, options: &SolverOptions)` now and returns structures with the parameters and the summary.
 - More error types, they all use `thiserror` now.
-- Many more changes.
-
-### Deprecated
-
---
+- Many more **breaking** changes.
 
 ### Removed
 
 - `loss::CustomLossFunction` and `loss::StockLossFunction`.
 - Some more things.
-
-### Fixed
-
---
-
-### Security
-
---
 
 ## [0.1.2] 2023-01-24
 
