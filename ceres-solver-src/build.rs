@@ -31,22 +31,20 @@ fn copy_dir(from: impl AsRef<Path>, to: impl AsRef<Path>) -> std::io::Result<()>
     Ok(())
 }
 
-fn main() {
-    let vendor_dir: PathBuf = [env::var("CARGO_MANIFEST_DIR").unwrap(), "vendor".into()]
-        .into_iter()
-        .collect();
-    let ceres_dir = {
-        let mut dir = vendor_dir.clone();
-        dir.push("ceres-solver");
-        dir
-    };
-    let eigen_dir = {
-        let mut dir = vendor_dir;
+struct EigenDirs {
+    src: PathBuf,
+    cmake: OsString,
+    dst: PathBuf,
+}
+
+fn install_eigen(vendor_dir: &Path) -> EigenDirs {
+    let src_dir = {
+        let mut dir = vendor_dir.to_owned();
         dir.push("eigen");
         dir
     };
-    let eigen_cmake_dir = {
-        let mut dir = eigen_dir.clone();
+    let cmake_dir = {
+        let mut dir = src_dir.clone();
         dir.push("cmake");
         #[allow(unused_mut)]
         let mut os_str: OsString = dir.into();
@@ -75,30 +73,49 @@ fn main() {
         }
         os_str
     };
-    let eigen_include_dir = {
-        let mut dir = eigen_dir.clone();
+    let include_dir = {
+        let mut dir = src_dir.clone();
         dir.push("Eigen");
         dir
     };
-    let dst_eigen = {
+    let dst = {
         let mut dir = PathBuf::from(env::var("OUT_DIR").unwrap());
         dir.push("include");
         dir
     };
-    let dst_eigen_include = {
-        let mut dir = dst_eigen.clone();
+    let dst_include = {
+        let mut dir = dst.clone();
         dir.push("Eigen");
         dir
     };
 
-    copy_dir(eigen_include_dir, dst_eigen_include).unwrap();
+    copy_dir(include_dir, dst_include).unwrap();
 
-    let dst_ceres = cmake::Config::new(ceres_dir)
+    EigenDirs {
+        src: src_dir,
+        cmake: cmake_dir,
+        dst,
+    }
+}
+
+struct CeresDirs {
+    dst_include: PathBuf,
+    dst_lib: PathBuf,
+    dst_miniglog_include: PathBuf,
+}
+
+fn install_ceres(vendor_dir: &Path, eigen_dirs: &EigenDirs) -> CeresDirs {
+    let src_dir = {
+        let mut dir = vendor_dir.to_owned();
+        dir.push("ceres-solver");
+        dir
+    };
+
+    let dst = cmake::Config::new(src_dir)
         .profile("Release")
         .pic(true)
-        .env("EIGEN3_ROOT_DIR", &eigen_dir)
-        .define("CMAKE_MODULE_PATH", eigen_cmake_dir)
-        .define("CMAKE_CXX_FLAGS", "-DEIGEN_NO_DEBUG")
+        .env("EIGEN3_ROOT_DIR", &eigen_dirs.src)
+        .define("CMAKE_MODULE_PATH", &eigen_dirs.cmake)
         // Most of the options described here:
         // http://ceres-solver.org/installation.html#customizing-the-build
         .define("CUDA", "OFF")
@@ -119,31 +136,52 @@ fn main() {
         .define("MSVC_USE_STATIC_CRT", "OFF") // ??? we use default
         .define("LIB_SUFFIX", "")
         .build();
-    let dst_ceres_include = {
-        let mut dir = dst_ceres.clone();
+    let dst_include = {
+        let mut dir = dst.clone();
         dir.push("include");
         dir
     };
-    let dst_ceres_miniglog_include = {
-        let mut dir = dst_ceres_include.clone();
+    let dst_miniglog_include = {
+        let mut dir = dst_include.clone();
         dir.push("ceres");
         dir.push("internal");
         dir.push("miniglog");
         dir
     };
-    let dst_ceres_lib = {
-        let mut dir = dst_ceres;
+    let dst_lib = {
+        let mut dir = dst;
         dir.push("lib");
         dir
     };
+    CeresDirs {
+        dst_include,
+        dst_lib,
+        dst_miniglog_include,
+    }
+}
 
-    println!("cargo:rustc-link-search=native={}", dst_ceres_lib.display());
+fn main() {
+    let vendor_dir: PathBuf = [env::var("CARGO_MANIFEST_DIR").unwrap(), "vendor".into()]
+        .into_iter()
+        .collect();
+
+    let eigen_dirs = install_eigen(&vendor_dir);
+    let ceres_dirs = install_ceres(&vendor_dir, &eigen_dirs);
+
+    println!(
+        "cargo:rustc-link-search=native={}",
+        ceres_dirs.dst_lib.display()
+    );
     println!("cargo:rustc-link-lib=static=ceres");
     println!(
         "cargo:include={}",
-        env::join_paths([&dst_ceres_include, &dst_ceres_miniglog_include, &dst_eigen])
-            .unwrap()
-            .into_string()
-            .unwrap()
+        env::join_paths([
+            &ceres_dirs.dst_include,
+            &ceres_dirs.dst_miniglog_include,
+            &eigen_dirs.dst
+        ])
+        .unwrap()
+        .into_string()
+        .unwrap()
     );
 }
