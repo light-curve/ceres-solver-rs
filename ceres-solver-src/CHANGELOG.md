@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
---
+- Build Ceres' dependency [`glog`](https://github.com/google/glog) from source. It is much better than previous approach with built-in `miniglog` from Ceres because it wasn't configurable and always output something
 
 ### Deprecated
 
