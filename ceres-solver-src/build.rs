@@ -120,14 +120,9 @@ fn main() {
     );
     println!(
         "cargo:include={}",
-        env::join_paths([
-            &eigen_dirs.include,
-            // &gflags_dirs.include,
-            &glog_dirs.include,
-            &ceres_dirs.include,
-        ])
-        .unwrap()
-        .into_string()
-        .unwrap()
+        env::join_paths([&eigen_dirs.include, &glog_dirs.include, &ceres_dirs.include,])
+            .unwrap()
+            .into_string()
+            .unwrap()
     );
 }
