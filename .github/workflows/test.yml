@@ -23,11 +23,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - name: Install ceres and libclang
+      - name: Install ceres
         run: |
           sudo apt-get update
           sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y --no-install-recommends libceres-dev libclang1
+          sudo apt-get install -y --no-install-recommends libceres-dev
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -47,11 +47,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - name: Install Cmake amd libclang on Linux
+      - name: Install Cmake on Linux
         if: ${{ runner.os == 'Linux' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends cmake libclang1
+          sudo apt-get install -y --no-install-recommends cmake
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust_toolchain }}
@@ -59,10 +59,11 @@ jobs:
         run: cargo +${{ matrix.rust_toolchain }} check --all-targets --workspace --features source
       - name: Test ceres-solver
         run: cargo +${{ matrix.rust_toolchain }} test --features source
-# Doesn't work for now due to C++ stdlib linking issues
-#       - name: Test ceres-solver-sys
-#         run: cargo +${{ matrix.rust_toolchain }} test --features source
-#         working-directory: ceres-solver-sys
+      - name: Test ceres-solver-sys
+        # Doesn't work for now due to linking issues
+        if: ${{ runner.os != 'Linux' }}
+        run: cargo +${{ matrix.rust_toolchain }} test --features source
+        working-directory: ceres-solver-sys
 
   system-ceres:
     runs-on: ${{ matrix.os }}
@@ -78,12 +79,12 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - name: Install ceres and libclang on Linux
+      - name: Install ceres on Linux
         if: ${{ runner.os == 'Linux' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y --no-install-recommends libceres-dev libclang1
+          sudo apt-get install -y --no-install-recommends libceres-dev
       - name: Install ceres on macOS
         if: ${{ runner.os == 'macOS' }}
         run: brew install ceres-solver
@@ -102,5 +103,7 @@ jobs:
       - name: Test ceres-solver
         run: cargo +${{ matrix.rust_toolchain }} test --features system
       - name: Test ceres-solver-sys
+        # Doesn't work on Linux for now due to linking issues
+        if: ${{ runner.os != 'Linux' }}
         run: cargo +${{ matrix.rust_toolchain }} test --features system
         working-directory: ceres-solver-sys
