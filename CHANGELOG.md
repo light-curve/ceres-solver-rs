@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
---
+- - CI and "source" feature: Windows build removed. Probably it doesn't work anymore, help needed to fix it.
 
 ### Fixed
 
