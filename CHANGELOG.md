@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
---
+- Bump `ceres-solver-sys` to `0.2.1` which causes turning logging off by default. We don't consider it as a breaking change, but by default you will see no output now when using "source" Cargo feature.
 
 ### Deprecated
 
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
---
+- - CI and "source" feature: Windows build removed. Probably it doesn't work anymore, help needed to fix it.
 
 ### Fixed
 

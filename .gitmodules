@@ -4,3 +4,6 @@
 [submodule "contrib/eigen"]
 	path = ceres-solver-src/vendor/eigen
 	url = https://gitlab.com/libeigen/eigen.git
+[submodule "ceres-solver-src/vendor/glog"]
+	path = ceres-solver-src/vendor/glog
+	url = https://github.com/google/glog
