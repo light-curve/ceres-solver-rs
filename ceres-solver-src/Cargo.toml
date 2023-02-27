@@ -1,6 +1,6 @@
 [package]
 name = "ceres-solver-src"
-version = "0.2.0-alpha.0+ceres2.1.0-eigen3.4.0-glog0.6.0"
+version = "0.2.0-beta.0+ceres2.1.0-eigen3.4.0-glog0.6.0"
 edition = "2021"
 links = "ceres"
 readme = "README.md"
