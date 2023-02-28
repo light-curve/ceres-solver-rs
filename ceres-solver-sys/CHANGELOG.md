@@ -13,8 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Bump `ceres-solver-src` to `0.2.0`. This replaces `miniglog` with `glog` and makes logging configurable. We don't consider it as a breaking change, but by default you will see no output now when using "source" Cargo feature.
-- "source" feature: discover `eigen` using `pkg-config`.
+-
 
 ### Deprecated
 
@@ -22,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- CI and "source" feature: Windows build removed. Probably it doesn't work anymore, help needed to fix it.
+-
 
 ### Fixed
 
@@ -31,6 +30,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 --
+
+## [0.2.1] 2023-02-28
+
+### Changed
+
+- Bump `ceres-solver-src` to `0.2.0`. This replaces `miniglog` with `glog` and makes logging configurable. We don't consider it as a breaking change, but by default you will see no output now when using "source" Cargo feature.
+- "source" feature: discover `eigen` using `pkg-config`.
+
+### Removed
+
+- CI and "source" feature: Windows build removed. Probably it doesn't work anymore, help needed to fix it.
 
 ## [0.2.0] 2023-02-09
 
