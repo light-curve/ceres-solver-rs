@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Build Ceres' dependency [`glog`](https://github.com/google/glog) from source. It is much better than previous approach with built-in `miniglog` from Ceres because it wasn't configurable and always output something
+--
 
 ### Deprecated
 
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- CI: Windows build is removed, probably it doesn't build there anymore. Help needed to fix it.
+--
 
 ### Fixed
 
@@ -30,6 +30,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 --
+
+## [0.2.0+ceres2.1.0-eigen3.4.0-glog0.6.0] 2023-02-28
+
+### Changed
+
+- Build Ceres' dependency [`glog`](https://github.com/google/glog) from source. It is much better than previous approach with built-in `miniglog` from Ceres because it wasn't configurable and always output something
+
+### Removed
+
+- CI: Windows build is removed, probably it doesn't build there anymore. Help needed to fix it.
 
 ## [0.1.1+ceres2.1.0-eigen3.4.0] 2023-02-09
 
