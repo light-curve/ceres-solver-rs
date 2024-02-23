@@ -16,15 +16,13 @@ members = [
 ]
 
 [features]
-# v2.1 introduced some breaking changes
-v2_1 = ["ceres-solver-sys/v2_1"]
 system = ["ceres-solver-sys/system"]
 # "source" overrides "system"
 source = ["ceres-solver-sys/source"]
 default = ["system"]
 
 [dependencies.ceres-solver-sys]
-version = "0.2.2"
+version = "0.3.0"
 path = "./ceres-solver-sys"
 
 [dependencies.thiserror]

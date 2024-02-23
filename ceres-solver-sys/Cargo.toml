@@ -1,6 +1,6 @@
 [package]
 name = "ceres-solver-sys"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 readme = "README.md"
 description = "Unsafe Rust bindings for the Ceres Solver"
@@ -9,11 +9,9 @@ license = "MIT OR Apache-2.0"
 rust-version = "1.57.0"
 
 [features]
-# v2.1 introduced some breaking changes
-v2_1 = []
 system = ["pkg-config"]
 # "source" overrides "system"
-source = ["ceres-solver-src", "v2_1"]
+source = ["ceres-solver-src"]
 default = ["system"]
 
 [dependencies.ceres-solver-src]
