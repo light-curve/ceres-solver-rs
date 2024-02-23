@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
+## [0.3.0+cerese2.2.0-eigen3.4.0-glog0.7.0] 2024-02-26
+
+### Changed
+
+- **Breaking** `ceres-solver` is updated to 2.2, which is backward incompatible with 2.1.0
+- `glog` is being built without `unwind` support
+
 ## [0.2.0+ceres2.1.0-eigen3.4.0-glog0.6.0] 2023-02-28
 
 ### Changed
