@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
+## [0.3.0] 2024-02-26
+
+### Changed
+
+- **Breaking** The only supported version of ceres-solver is 2.2 now, due to some breaking changes in the C++ API, this removes support of v2.0 and v2.1.
+
 ## [0.2.2] 2024-02-26
 
 ### Changed
