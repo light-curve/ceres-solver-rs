@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
+## [0.2.2] 2024-02-26
+
+### Changed
+
+- Bump `ceser-solver-sys` to `0.2.2`, which requires `ceres-solver` version to be between 2.0 and 2.1, because 2.2 is known to be incompatible.
+
 ## [0.2.1] 2023-03-02
 
 ### Changed

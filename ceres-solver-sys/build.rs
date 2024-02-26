@@ -25,7 +25,7 @@ fn main() {
             });
         }
         match pkg_config::Config::new()
-            .range_version("2.0.0".."3.0.0")
+            .range_version("2.0.0".."2.2.0")
             .probe("ceres")
         {
             Ok(library) => library.include_paths.into_iter().for_each(|path| {
