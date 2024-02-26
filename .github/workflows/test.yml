@@ -23,16 +23,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Install ceres
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y --no-install-recommends libceres-dev
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
       - name: cargo clippy
-        run: cargo +stable clippy --all-targets --workspace --features system -- -Dwarnings
+        run: cargo +stable clippy --all-targets --workspace --no-default-features --features source -- -Dwarnings
 
   ceres-built-from-source:
     runs-on: ${{ matrix.os }}
@@ -75,7 +70,8 @@ jobs:
       fail-fast: false
       matrix:
         # Help needed for Windows, vcpkg builds it, but I don't know how to make it discoverable
-        os: [ "ubuntu-latest", "macos-latest" ]
+        # We need ceres 2.2, so ubuntu-latest is temporary disabled
+        os: [ "macos-latest" ]
         rust_toolchain: [ "1.57", "stable" ]
 
     steps:
