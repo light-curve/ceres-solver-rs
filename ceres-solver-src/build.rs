@@ -44,6 +44,7 @@ fn install_glog(vendor_dir: &Path) -> DstDirs {
         .define("WITH_GFLAGS", "OFF")
         .define("WITH_GTEST", "OFF")
         .define("WITH_PKGCONFIG", "OFF")
+        .define("WITH_UNWIND", "OFF")
         .build();
     let dst_lib = {
         let mut dir = dst.clone();
@@ -76,18 +77,16 @@ fn install_ceres(vendor_dir: &Path) -> DstDirs {
         .define("LAPACK", "OFF")
         .define("EIGENSPARSE", "ON")
         .define("SUITESPARSE", "OFF")
-        .define("CXSPARSE", "OFF")
         .define("ACCELERATESPARSE", "OFF")
+        .define("EIGENMETIS", "OFF")
         .define("GFLAGS", "OFF")
         .define("MINIGLOG", "OFF")
         .define("SCHUR_SPECIALIZATIONS", "OFF")
-        // .define("CERES_THREADING_MODEL", "CXX_THREADS") // doesn't have obvious defaults
         .define("BUILD_SHARED_LIBS", "OFF")
         .define("EXPORT_BUILD_DIR", "OFF")
         .define("BUILD_BENCHMARKS", "OFF")
         .define("BUILD_DOCUMENTATION", "OFF")
         .define("BUILD_EXAMPLES", "OFF")
-        .define("MSVC_USE_STATIC_CRT", "OFF") // ??? we use default
         .build();
     let dst_include = {
         let mut dir = dst.clone();

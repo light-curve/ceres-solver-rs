@@ -23,16 +23,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Install ceres
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y --no-install-recommends libceres-dev
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
       - name: cargo clippy
-        run: cargo +stable clippy --all-targets --workspace --features system -- -Dwarnings
+        run: cargo +stable clippy --all-targets --workspace --no-default-features --features source -- -Dwarnings
 
   ceres-built-from-source:
     runs-on: ${{ matrix.os }}
@@ -84,10 +79,14 @@ jobs:
           submodules: true
       - name: Install ceres on Linux
         if: ${{ runner.os == 'Linux' }}
+        # It would be better to use apt-get, but ceres-solver 2.2 comes only in Ubuntu 24.04
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libunwind-dev
-          sudo apt-get install -y --no-install-recommends libceres-dev
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install ceres-solver
+          echo "LD_LIBRARY_PATH=$(brew --prefix)/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "C_INCLUDE_PATH=$(brew --prefix)/include:$(brew --prefix)/include/eigen3:$C_INCLUDE_PATH" >> $GITHUB_ENV
+          echo "CPATH=$(brew --prefix)/include:$(brew --prefix)/include/eigen3:$CPATH" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=$(brew --prefix)/lib:$LIBRARY_PATH" >> $GITHUB_ENV
       - name: Install ceres on macOS
         if: ${{ runner.os == 'macOS' }}
         run: brew install ceres-solver

@@ -67,6 +67,7 @@ pub mod ffi {
         IDENTITY,
         JACOBI,
         SCHUR_JACOBI,
+        SCHUR_POWER_SERIES_EXPANSION,
         CLUSTER_JACOBI,
         CLUSTER_TRIDIAGONAL,
         SUBSET,
@@ -82,16 +83,15 @@ pub mod ffi {
     enum DenseLinearAlgebraLibraryType {
         EIGEN,
         LAPACK,
-        #[cfg(feature = "v2_1")]
         CUDA,
     }
 
     #[repr(u32)]
     enum SparseLinearAlgebraLibraryType {
         SUITE_SPARSE,
-        CX_SPARSE,
         EIGEN_SPARSE,
         ACCELERATE_SPARSE,
+        CUDA_SPARSE,
         NO_SPARSE,
     }
 
