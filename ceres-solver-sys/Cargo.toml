@@ -20,7 +20,7 @@ path = "../ceres-solver-src"
 optional = true
 
 [dependencies.cxx]
-version = "1,<1.0.87"  # 1.0.87 requires MSRV 1.60
+version = "1, <1.0.121"  # 1.0.87 requires MSRV 1.60
 features = ["c++17"]
 
 [build-dependencies]
