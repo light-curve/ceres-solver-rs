@@ -1,6 +1,6 @@
 [package]
 name = "ceres-solver-sys"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 readme = "README.md"
 description = "Unsafe Rust bindings for the Ceres Solver"
@@ -26,7 +26,7 @@ features = ["c++17"]
 [build-dependencies]
 cmake = "0.1"
 cxx-build = "1,<=1.0.129"  # 1.0.130 requires MSRV 1.70
-pkg-config = {version = "0.3", optional = true}
+pkg-config = { version = "0.3", optional = true }
 
 [dev-dependencies]
 approx = "0.5"
