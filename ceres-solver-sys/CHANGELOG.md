@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Some clippy v0.1.83 lints.
+- macOS built for homebrew ceres installation on aaarch64.
 
 ### Security
 

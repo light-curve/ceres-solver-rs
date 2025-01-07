@@ -31,7 +31,15 @@ fn main() {
             Ok(library) => library.include_paths.into_iter().for_each(|path| {
                 cc_build.include(path);
             }),
-            Err(_) => println!("cargo:rustc-link-lib=ceres"),
+            Err(_) => {
+                println!("cargo:rustc-link-lib=dylib=ceres");
+                // Ceres installed with Homebrew on Apple Silicon
+                #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+                {
+                    cc_build.include("/opt/homebrew/include");
+                    println!("cargo:rustc-link-search=/opt/homebrew/lib");
+                }
+            }
         }
     }
     cc_build.compile("ceres-solver-sys");
