@@ -367,7 +367,7 @@ impl<'cost> NllsProblem<'cost> {
     }
 }
 
-impl<'cost> Default for NllsProblem<'cost> {
+impl Default for NllsProblem<'_> {
     fn default() -> Self {
         Self::new()
     }

@@ -19,24 +19,24 @@ impl<'cost> CostFunction<'cost> {
     ///
     /// # Arguments
     /// - func - function to find residuals and Jacobian for the problem block. The function itself
-    /// must return [false] if it cannot compute Jacobian, [true] otherwise, and accept following
-    /// arguments:
+    ///   must return [false] if it cannot compute Jacobian, [true] otherwise, and accept following
+    ///   arguments:
     ///   - parameters - slice of [f64] slices representing the current values of the parameters.
-    ///   Each parameter is represented as a slice, the slice sizes are specified by
-    ///   `parameter_sizes`.
+    ///     Each parameter is represented as a slice, the slice sizes are specified by
+    ///     `parameter_sizes`.
     ///   - residuals - mutable slice of [f64] for residuals outputs, the size is specified by
-    ///   `num_residuals`.
+    ///     `num_residuals`.
     ///   - jacobians: [JacobianType](crate::types::JacobianType) - represents a mutable
-    ///   structure to output the Jacobian. Sometimes the solver doesn't need the Jacobian or
-    ///   some of its components, in this case the corresponding value is [None]. For the required
-    ///   components it has a 3-D shape: top index is for the parameter index, middle index is for
-    ///   the residual index, and the most inner dimension is for the given parameter component
-    ///   index. So the size of top-level [Some] is defined by `parameter_sizes.len()`, second-level
-    ///   [Some]'s slice length is `num_residuals`, and the bottom-level slice has length of
-    ///   `parameter_sizes[i]`, where `i` is the top-level index.
+    ///     structure to output the Jacobian. Sometimes the solver doesn't need the Jacobian or
+    ///     some of its components, in this case the corresponding value is [None]. For the required
+    ///     components it has a 3-D shape: top index is for the parameter index, middle index is for
+    ///     the residual index, and the most inner dimension is for the given parameter component
+    ///     index. So the size of top-level [Some] is defined by `parameter_sizes.len()`,
+    ///     second-level [Some]'s slice length is `num_residuals`, and the bottom-level slice has
+    ///     length of `parameter_sizes[i]`, where `i` is the top-level index.
     /// - parameter_sizes - sizes of the parameter vectors.
     /// - num_residuals - length of the residual vector, usually corresponds to the number of
-    /// data points.
+    ///   data points.
     pub fn new(
         func: impl Into<CostFunctionType<'cost>>,
         parameter_sizes: impl Into<Vec<usize>>,
@@ -112,7 +112,7 @@ impl<'a> OwnedJacobian<'a> {
 
 struct OwnedDerivative<'a>(Option<Vec<&'a mut [f64]>>);
 
-impl<'a> OwnedDerivative<'a> {
+impl OwnedDerivative<'_> {
     fn from_pointer(pointer: *mut f64, parameter_size: usize, num_residuals: usize) -> Self {
         if pointer.is_null() {
             return Self(None);

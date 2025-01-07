@@ -372,7 +372,7 @@ impl SolverOptionsBuilder {
             use std::os::unix::ffi::OsStrExt;
             bytes = os_string.as_bytes().into();
         }
-        #[cfg(wasm)]
+        #[cfg(target_family = "wasm")]
         {
             use std::os::wasi::ffi::OsStrExt;
             bytes = os_string.as_bytes().into();
