@@ -22,9 +22,9 @@ impl LossFunction {
     ///
     /// # Arguments
     /// - func - a boxed function which accepts two arguments: non-negative squared residual, and
-    ///  an array of 0) loss function value, 1) its first, and 2) its second derivatives. See
-    /// details at
-    /// <http://ceres-solver.org/nnls_modeling.html#_CPPv4N5ceres12LossFunctionE>.
+    ///   an array of 0) loss function value, 1) its first, and 2) its second derivatives. See
+    ///   details at
+    ///   <http://ceres-solver.org/nnls_modeling.html#_CPPv4N5ceres12LossFunctionE>.
     pub fn custom(func: impl Into<LossFunctionType>) -> Self {
         let safe_func = func.into();
         let rust_func: Box<dyn Fn(f64, *mut f64)> = Box::new(move |sq_norm, out_ptr| {

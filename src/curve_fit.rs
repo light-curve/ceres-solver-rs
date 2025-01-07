@@ -28,16 +28,16 @@ impl<'cost> CurveFitProblem1D<'cost> {
     ///
     /// # Arguments
     /// - func - a function describing a curve. It must return [false] if it cannot calculate
-    /// Jacobian, or [true] otherwise. It accepts the following parameters:
+    ///   Jacobian, or [true] otherwise. It accepts the following parameters:
     ///   - x - an independent coordinate.
     ///   - parameters - a slice for the current value of the problem parameters. Note, that unlike
-    ///   [NllsProblem] it is a 1-D slice.
+    ///     [NllsProblem] it is a 1-D slice.
     ///   - y - a mutable reference to output the function value.
     ///   - jacobians - an output Jacobian matrix, it (or any of its component) can be [None], which
-    ///   means that the solver doesn't need it. Otherwise it has a 2-D shape, the top index
-    ///   corresponds to a parameter component, the bottom index corresponds to a data point. So the
-    ///   top-level slice inside [Some] has length of `parameters.len()`, while inner slices have
-    ///   the same length as `x` and `y`.
+    ///     means that the solver doesn't need it. Otherwise it has a 2-D shape, the top index
+    ///     corresponds to a parameter component, the bottom index corresponds to a data point.
+    ///     So the top-level slice inside [Some] has length of `parameters.len()`, while inner
+    ///     slices have the same length as `x` and `y`.
     /// - x - independent coordinate values of data poitns.
     /// - y - values of data points.
     /// - parameters - a vector of the initial parameters. Note that unlike [NllsProblem] it is a
@@ -419,7 +419,7 @@ impl<'cost, 'param> CurveFitProblem1DBuilder<'cost, 'param> {
     }
 }
 
-impl<'cost, 'param> Default for CurveFitProblem1DBuilder<'cost, 'param> {
+impl Default for CurveFitProblem1DBuilder<'_, '_> {
     fn default() -> Self {
         Self::new()
     }

@@ -4,6 +4,10 @@ pub use cxx;
 pub mod ffi {
     // The explicit lifetimes make some signatures more verbose.
     #![allow(clippy::needless_lifetimes)]
+    // False positive https://github.com/rust-lang/rust-clippy/issues/13360
+    #![allow(clippy::needless_maybe_sized)]
+    // False positive, I believe
+    #![allow(clippy::missing_safety_doc)]
 
     #[repr(u32)]
     enum MinimizerType {
@@ -384,7 +388,7 @@ pub struct RustCostFunction<'cost>(
     pub Box<dyn Fn(*const *const f64, *mut f64, *mut *mut f64) -> bool + 'cost>,
 );
 
-impl<'cost> RustCostFunction<'cost> {
+impl RustCostFunction<'_> {
     pub fn evaluate(
         &self,
         parameters: *const *const f64,
