@@ -31,23 +31,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
+## [0.4.0] 2024-01-07
+
+### Changed
+
+- **Breaking** MSRV is changed from 1.57.0 to 1.67.0.
+
 ## [0.3.0] 2024-02-26
 
 ### Changed
 
-- **Breaking** The only supported version of ceres-solver is 2.2 now, due to some breaking changes in the C++ API, this removes support of v2.0 and v2.1.
+- **Breaking** The only supported version of ceres-solver is 2.2 now, due to some breaking changes in the C++ API, this
+  removes support of v2.0 and v2.1.
 
 ## [0.2.2] 2024-02-26
 
 ### Changed
 
-- Bump `ceser-solver-sys` to `0.2.2`, which requires `ceres-solver` version to be between 2.0 and 2.1, because 2.2 is known to be incompatible.
+- Bump `ceser-solver-sys` to `0.2.2`, which requires `ceres-solver` version to be between 2.0 and 2.1, because 2.2 is
+  known to be incompatible.
 
 ## [0.2.1] 2023-03-02
 
 ### Changed
 
-- Bump `ceres-solver-sys` to `0.2.1` which causes turning logging off by default. We don't consider it as a breaking change, but by default you will see no output now when using "source" Cargo feature.
+- Bump `ceres-solver-sys` to `0.2.1` which causes turning logging off by default. We don't consider it as a breaking
+  change, but by default you will see no output now when using "source" Cargo feature.
 
 ### Removed
 
@@ -66,13 +75,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **breaking** `ceres-solver-sys` is updated to `0.2` which gives access to more APIs of the C++ interface. It caused a lot of breaking changes in the `ceres-solver` crate in many ways.
+- **breaking** `ceres-solver-sys` is updated to `0.2` which gives access to more APIs of the C++ interface. It caused a
+  lot of breaking changes in the `ceres-solver` crate in many ways.
 - **breaking** `CostFunction` is not public anymore, `CostFunctionType` is the only thing you need to know about.
 - **breaking** `LossFunction` is changed from `enum` to an opaque `struct`.
 - **breaking** `LossFunction::tolerant_loss()` renamed into `LossFunction::tolerant()`.
 - **breaking** `parameters` module renamed into `parameter_block` and provides a different interface now.
-- **breaking** Residual blocks are now built from `NllsProblem` and capture it until the builder releases the problem back adding the residual block to it.
-- **breaking** Solution of the both problem is via `::solve(self, options: &SolverOptions)` now and returns structures with the parameters and the summary.
+- **breaking** Residual blocks are now built from `NllsProblem` and capture it until the builder releases the problem
+  back adding the residual block to it.
+- **breaking** Solution of the both problem is via `::solve(self, options: &SolverOptions)` now and returns structures
+  with the parameters and the summary.
 - More error types, they all use `thiserror` now.
 - Many more **breaking** changes.
 
@@ -92,7 +104,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Cargo features for `ceres-solver` reflecting `ceres-solver-sys` https://github.com/light-curve/ceres-solver-rs/pull/3
-
 
 ### Fixed
 
