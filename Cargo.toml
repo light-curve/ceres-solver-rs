@@ -26,7 +26,7 @@ version = "0.4.0"
 path = "./ceres-solver-sys"
 
 [dependencies.thiserror]
-version = "1"
+version = "2"
 
 [dev-dependencies]
 approx = "0.5"
