@@ -14,7 +14,8 @@ Ceres Solver is a C++ library for large optimization problems.
 It can be used to solve Non-linear Least Squares problems with constraints and general optimization problems.
 Here we provide a Rust binding for this library.
 
-The earliest Ceres Solver version tested is 2.0, but the bindings may work with older versions
+The bindings require Ceres Solver version 2.2, but the bindings may work with older or new versions.
+Please submit an issue if you need a support of other versions.
 
 This project consists of three crates:
 - `ceres-solver` is a safe Rust bindings
