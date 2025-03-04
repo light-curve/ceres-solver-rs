@@ -64,4 +64,4 @@ The following list shows the status of the binding support:
 - [ ] Covariance estimation
 - [ ] General unconstrained minimization
 
-Please don't hesitate to create an issue to request prioritization of any functionality that may have been prioritized.
+Please don't hesitate to create an issue to request prioritization of any functionality you need.
