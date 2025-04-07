@@ -2,8 +2,6 @@
 // Created by Konstantin Malanchev on 2023-01-24.
 //
 
-#include <glog/logging.h>
-
 #include "ceres-solver-sys/src/lib.h"
 #include "ceres-solver-sys/src/lib.rs.h"
 

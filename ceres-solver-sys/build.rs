@@ -8,9 +8,12 @@ fn main() {
     cc_build.flag("-std=c++17");
     #[cfg(feature = "source")]
     {
+        cc_build.define("GLOG_USE_GLOG_EXPORT", None);
+
         cc_build.includes(std::env::split_paths(
             &std::env::var("DEP_CERES_INCLUDE").unwrap(),
         ));
+
         println!("cargo:rustc-link-lib=static=glog");
         println!("cargo:rustc-link-lib=static=ceres");
     }

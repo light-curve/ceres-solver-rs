@@ -45,6 +45,7 @@ fn install_glog(vendor_dir: &Path) -> DstDirs {
         .define("WITH_GTEST", "OFF")
         .define("WITH_PKGCONFIG", "OFF")
         .define("WITH_UNWIND", "OFF")
+        .define("CMAKE_CXX_STANDARD", "14")
         .build();
     let dst_lib = {
         let mut dir = dst.clone();
