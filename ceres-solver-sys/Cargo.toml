@@ -1,6 +1,6 @@
 [package]
 name = "ceres-solver-sys"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 readme = "README.md"
 description = "Unsafe Rust bindings for the Ceres Solver"
@@ -15,7 +15,7 @@ source = ["ceres-solver-src"]
 default = ["system"]
 
 [dependencies.ceres-solver-src]
-version = "0.3.0"
+version = "0.4.0"
 path = "../ceres-solver-src"
 optional = true
 
