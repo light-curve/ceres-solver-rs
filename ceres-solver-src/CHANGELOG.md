@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update `glog` to 0.7.1
+--
 
 ### Deprecated
 
@@ -31,7 +31,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
-## [0.3.0+cerese2.2.0-eigen3.4.0-glog0.7.0] 2024-02-26
+## [0.4.0+ceres2.2.0-eigen3.4.0-glog0.7.1] 2025-04-18
+
+- **Breaking** Update `glog` to 0.7.1. It requires to define some additional flags to use, e.g. GLOG_USE_GLOG_EXPORT
+
+## [0.3.0+ceres2.2.0-eigen3.4.0-glog0.7.0] 2024-02-26
+
+### Notes
+
+Despite the version name, glog 0.6.0 was used.
 
 ### Changed
 

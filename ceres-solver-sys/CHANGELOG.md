@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
+## [0.4.2] 2025-04-18
+
+### Changed
+
+- Require `ceres-solver-sys` 0.4.0 for the Cargo `source` feature, this uses glog 0.7.1. Older version of glog 0.6.0
+  stopped being support by CMake 4.0.0, so we need to update it.
+
 ## [0.4.1] 2025-01-07
 
 ### Fixed
