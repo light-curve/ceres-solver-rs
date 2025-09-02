@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@master
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@master
@@ -42,7 +42,7 @@ jobs:
         rust_toolchain: [ "1.67", "stable" ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
       - name: Install Cmake on Linux
@@ -74,7 +74,7 @@ jobs:
         rust_toolchain: [ "1.67", "stable" ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
       - name: Install ceres on Linux
