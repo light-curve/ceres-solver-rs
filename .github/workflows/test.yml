@@ -13,6 +13,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+          components: rustfmt
       - name: Run cargo fmt
         run: cargo +stable fmt --all --check
 
@@ -26,6 +27,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+          components: clippy
       - name: cargo clippy
         run: cargo +stable clippy --all-targets --workspace --no-default-features --features source -- -Dwarnings
 
