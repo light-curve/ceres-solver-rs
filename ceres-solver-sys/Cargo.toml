@@ -25,7 +25,7 @@ features = ["c++17"]
 
 [build-dependencies]
 cmake = "0.1"
-cxx-build = "1,<=1.0.129"  # 1.0.130 requires MSRV 1.70
+cxx-build = "1, <=1.0.187"  # 1.0.130 requires MSRV 1.70
 pkg-config = { version = "0.3", optional = true }
 
 [dev-dependencies]
