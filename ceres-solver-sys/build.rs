@@ -40,6 +40,7 @@ fn main() {
                 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
                 {
                     cc_build.include("/opt/homebrew/include");
+                    cc_build.include("/opt/homebrew/include/eigen3");
                     println!("cargo:rustc-link-search=/opt/homebrew/lib");
                 }
             }
