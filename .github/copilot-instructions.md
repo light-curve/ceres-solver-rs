@@ -81,11 +81,10 @@ pre-commit run --all-files
 
 ### General Rust Guidelines
 
-- **MSRV**: Rust 1.67.0 (minimum supported version)
-- **Edition**: 2021
 - Follow standard Rust naming conventions (snake_case for functions/variables, PascalCase for types)
 - Use `cargo fmt` for consistent formatting
 - Pass `cargo clippy` with `-Dwarnings` (no warnings allowed)
+- Check `Cargo.toml` for the current MSRV (minimum supported Rust version)
 
 ### Error Handling
 
@@ -109,14 +108,14 @@ pre-commit run --all-files
 ### Dependencies
 
 - Minimize new dependencies
-- For FFI: `cxx` crate (version constraint: `<=1.0.129` for MSRV compatibility)
-- For errors: `thiserror` version 2
+- For FFI: `cxx` crate (version may be constrained for MSRV compatibility)
+- For errors: `thiserror` crate
 
 ## Development Workflow
 
 ### Adding New Features
 
-1. Check if the feature exists in Ceres Solver C++ API (version 2.2)
+1. Check if the feature exists in the supported version of Ceres Solver C++ API
 2. If adding FFI bindings:
    - Add C++ bridge code in `ceres-solver-sys/src/lib.cpp` and `lib.h`
    - Add Rust FFI bindings in `ceres-solver-sys/src/lib.rs` using `cxx`
@@ -144,7 +143,7 @@ pre-commit run --all-files
 
 - GitHub Actions workflow in `.github/workflows/test.yml`
 - Tests run on Ubuntu and macOS (Windows not supported yet)
-- Tests run with Rust 1.67 (MSRV) and stable
+- Tests run with MSRV and stable Rust toolchains
 - Pre-commit.ci runs formatting checks
 
 ## Common Tasks
@@ -173,9 +172,9 @@ pre-commit run --all-files
 
 - **FFI Safety**: All FFI code is in `ceres-solver-sys`; keep `ceres-solver` safe
 - **Memory Management**: Be careful with lifetime and ownership when crossing FFI boundary
-- **C++17**: The project uses C++17 features through `cxx`
+- **C++ Features**: The project uses modern C++ features through `cxx`
 - **Platform Support**: Ubuntu and macOS are fully supported; Windows support is limited
-- **Version Lock**: `cxx` and `cxx-build` are locked at `<=1.0.129` for MSRV compatibility
+- **Version Constraints**: Some dependencies like `cxx` and `cxx-build` may be version-constrained for MSRV compatibility
 
 ## Resources
 
