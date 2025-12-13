@@ -87,7 +87,7 @@ fn apply_patches(src_dir: &Path, patches_dir: &Path) {
 
     for patch_path in patches {
         println!("cargo:warning=Applying patch: {}", patch_path.display());
-        
+
         // Try to apply the patch with --forward, which skips already applied patches
         let output = Command::new("patch")
             .arg("-p1")
@@ -105,7 +105,7 @@ fn apply_patches(src_dir: &Path, patches_dir: &Path) {
             let stdout = String::from_utf8_lossy(&output.stdout);
             let stderr = String::from_utf8_lossy(&output.stderr);
             let combined = format!("{}{}", stdout, stderr);
-            
+
             // If the error is NOT "Reversed (or previously applied) patch detected", then panic
             if !combined.contains("Reversed (or previously applied) patch detected") {
                 eprintln!("Patch stdout: {}", stdout);
@@ -113,7 +113,10 @@ fn apply_patches(src_dir: &Path, patches_dir: &Path) {
                 panic!("Failed to apply patch: {}", patch_path.display());
             }
             // Otherwise, the patch was already applied, which is fine
-            println!("cargo:warning=Patch already applied: {}", patch_path.display());
+            println!(
+                "cargo:warning=Patch already applied: {}",
+                patch_path.display()
+            );
         }
     }
 }
