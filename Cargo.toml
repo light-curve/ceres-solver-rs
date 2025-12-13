@@ -1,12 +1,12 @@
 [package]
 name = "ceres-solver"
 version = "0.5.0"
-edition = "2021"
+edition = "2024"
 readme = "README.md"
 description = "Safe Rust bindings for the Ceres Solver"
 repository = "https://github.com/light-curve/ceres-solver-rs"
 license = "MIT OR Apache-2.0"
-rust-version = "1.87.0"
+rust-version = "1.85.0"
 exclude = [".github"]
 
 [workspace]
