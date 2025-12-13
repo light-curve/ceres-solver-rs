@@ -31,6 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
+## [0.5.1] 2025-12-13
+
+### Fixed
+
+- Building issues caused by Rust edtion bump to 2024, changed back to 2021.
+
+### Changed
+
+- Revert Rust edition from 2024 back to 2021, set resolver explicitly to 3 to support MSRV-aware dependency resolution.
+
 ## [0.5.0] 2025-12-13
 
 ### Changed
