@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
+## [0.5.0+ceres2.2.0-eigen3.4.0-glog0.7.1] 2025-12-13
+
+### Changed
+
+- **Build breking** Bump minimum supported Rust version (MSRV) to 1.85 to support MSRV-aware dependency resolution.
+- Bump Rust edition from 2021 to 2024.
+
 ## [0.4.0+ceres2.2.0-eigen3.4.0-glog0.7.1] 2025-04-18
 
 - **Breaking** Update `glog` to 0.7.1. It requires to define some additional flags to use, e.g. GLOG_USE_GLOG_EXPORT

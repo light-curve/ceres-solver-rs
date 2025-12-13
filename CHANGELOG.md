@@ -25,11 +25,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Some clippy v0.1.83 lints
+--
 
 ### Security
 
 --
+
+## [0.5.0] 2025-12-13
+
+### Changed
+
+- Bump `ceres-solver-sys` from `0.4.0` to `0.5.0`.
+- **Build breking** Bump minimum supported Rust version (MSRV) to 1.85 to support MSRV-aware dependency resolution.
+- Bump Rust edition from 2021 to 2024.
+
+### Fixed
+
+- Some clippy v0.1.83 lints
+- Eigen headers detection on macOS with homebrew installation.
 
 ## [0.4.0] 2024-01-07
 
