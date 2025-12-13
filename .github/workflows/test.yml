@@ -41,7 +41,7 @@ jobs:
         # glog/log_severity.h(57): fatal error C1189: #error:  ERROR macro is defined. Define
         # GLOG_NO_ABBREVIATED_SEVERITIES before including logging.h. See the document for detail.
         os: [ "ubuntu-latest", "macos-latest" ]
-        rust_toolchain: [ "1.87", "stable" ]
+        rust_toolchain: [ "1.85", "stable" ]
 
     steps:
       - uses: actions/checkout@v6
@@ -73,7 +73,7 @@ jobs:
       matrix:
         # Help needed for Windows, vcpkg builds it, but I don't know how to make it discoverable
         os: [ "ubuntu-latest", "macos-latest" ]
-        rust_toolchain: [ "1.87", "stable" ]
+        rust_toolchain: [ "1.85", "stable" ]
 
     steps:
       - uses: actions/checkout@v6
