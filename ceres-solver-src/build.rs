@@ -171,9 +171,7 @@ fn install_ceres(vendor_dir: &Path, manifest_dir: &Path) -> DstDirs {
 
 fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let vendor_dir: PathBuf = [manifest_dir.to_str().unwrap(), "vendor"]
-        .into_iter()
-        .collect();
+    let vendor_dir = manifest_dir.join("vendor");
 
     let eigen_dirs = install_eigen(&vendor_dir);
     let glog_dirs = install_glog(&vendor_dir);
