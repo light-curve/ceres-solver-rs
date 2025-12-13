@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
---
+- Bumped vendored Eigen to version 5.0.1 (from 3.4.0)
+- Patched vendored Ceres Solver 2.2.0 for Eigen 5.x compatibility
 
 ### Deprecated
 
