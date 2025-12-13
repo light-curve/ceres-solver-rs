@@ -31,6 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
+## [0.5.0] 2025-12-13
+
+### Changed
+
+- Bump `ceres-solver-src` from `0.4.0` to `0.5.0`.
+- **Build breking** Bump minimum supported Rust version (MSRV) to 1.85 to support MSRV-aware dependency resolution.
+- Bump Rust edition from 2021 to 2024.
+- Unpin `cxx` and `cxx-build` versions, now the latest 1.x versions will be used.
+- Remove redundant `cmake` build dependency.
+
 ## [0.4.2] 2025-04-18
 
 ### Changed
