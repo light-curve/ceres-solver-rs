@@ -41,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unpin `cxx` and `cxx-build` versions, now the latest 1.x versions will be used.
 - Remove redundant `cmake` build dependency.
 
+### Fixed
+
+- Eigen headers detection on macOS with homebrew installation.
+
 ## [0.4.2] 2025-04-18
 
 ### Changed
