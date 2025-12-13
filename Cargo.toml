@@ -1,12 +1,12 @@
 [package]
 name = "ceres-solver"
-version = "0.4.0"
-edition = "2021"
+version = "0.5.0"
+edition = "2024"
 readme = "README.md"
 description = "Safe Rust bindings for the Ceres Solver"
 repository = "https://github.com/light-curve/ceres-solver-rs"
 license = "MIT OR Apache-2.0"
-rust-version = "1.67.0"
+rust-version = "1.85.0"
 exclude = [".github"]
 
 [workspace]
@@ -22,7 +22,7 @@ source = ["ceres-solver-sys/source"]
 default = ["system"]
 
 [dependencies.ceres-solver-sys]
-version = "0.4.0"
+version = "0.5.0"
 path = "./ceres-solver-sys"
 
 [dependencies.thiserror]
