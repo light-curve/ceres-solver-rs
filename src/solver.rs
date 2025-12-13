@@ -3,7 +3,7 @@
 use crate::error::SolverOptionsBuildingError;
 use crate::residual_block::ResidualBlockId;
 
-use ceres_solver_sys::cxx::{UniquePtr, let_cxx_string};
+use ceres_solver_sys::cxx::{let_cxx_string, UniquePtr};
 use ceres_solver_sys::ffi;
 pub use ceres_solver_sys::ffi::{
     DenseLinearAlgebraLibraryType, DoglegType, DumpFormatType, LineSearchDirectionType,
