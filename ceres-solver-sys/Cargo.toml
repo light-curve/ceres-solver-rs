@@ -6,7 +6,7 @@ readme = "README.md"
 description = "Unsafe Rust bindings for the Ceres Solver"
 repository = "https://github.com/light-curve/ceres-solver-rs"
 license = "MIT OR Apache-2.0"
-rust-version = "1.67.0"
+rust-version = "1.87.0"
 
 [features]
 system = ["pkg-config"]
