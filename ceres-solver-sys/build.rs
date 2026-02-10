@@ -6,10 +6,9 @@ fn main() {
     let mut cc_build = cxx_build::bridge("src/lib.rs");
     cc_build.file("src/lib.cpp");
     cc_build.flag("-std=c++17");
+    cc_build.define("GLOG_USE_GLOG_EXPORT", None);
     #[cfg(feature = "source")]
     {
-        cc_build.define("GLOG_USE_GLOG_EXPORT", None);
-
         cc_build.includes(std::env::split_paths(
             &std::env::var("DEP_CERES_INCLUDE").unwrap(),
         ));
