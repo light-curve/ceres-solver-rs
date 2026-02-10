@@ -21,6 +21,7 @@ repos:
         language: rust
         entry: cargo fmt --all -- --check
         files: \.rs$
+        pass_filenames: false
     -   id: cargo-clippy
         name: cargo clippy
         language: rust
