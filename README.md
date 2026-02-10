@@ -22,7 +22,7 @@ This project consists of three crates:
 - `ceres-solver-sys` is an unsafe Rust bindings written with the usage of [`cxx`](https://lib.rs/crates/cxx)
 - `ceres-solver-src` is an optional no-code crate to build and distribute a minimal static Ceres Solver library
 
-To build Ceres Solver statically and link it to your project, use `source` Cargo feature, which would add `ceres-solver-src` dependency into your project.
+To build Ceres Solver statically and link it to your project, use the `source` Cargo feature, which will add the `ceres-solver-src` dependency to your project.
 
 ### Status of the binding support
 
@@ -64,4 +64,4 @@ The following list shows the status of the binding support:
 - [ ] Covariance estimation
 - [ ] General unconstrained minimization
 
-Please don't hesitate to create an issue to request prioritization of any functionality you need.
+Please don't hesitate to create an issue to request the prioritization of any functionality you need.
