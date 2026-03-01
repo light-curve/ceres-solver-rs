@@ -30,7 +30,7 @@ version = "2"
 
 [dev-dependencies]
 approx = "0.5"
-rand = "0.9"
+rand = "0.10"
 rand_chacha = "0.9"
 rand_distr = "0.5"
 
