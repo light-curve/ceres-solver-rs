@@ -432,7 +432,7 @@ mod tests {
     use crate::LossFunctionType;
 
     use approx::assert_abs_diff_eq;
-    use rand::{Rng, SeedableRng};
+    use rand::{RngExt, SeedableRng};
 
     fn curve_fit_problem_1d(loss: Option<LossFunction>) -> Vec<f64> {
         let (x, y): (Vec<_>, Vec<_>) = [
