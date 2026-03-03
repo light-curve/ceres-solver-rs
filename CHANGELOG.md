@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
---
+- Bump `rand` from `0.9` to `0.10`, `rand_chacha` from `0.9` to `0.10`, and `rand_distr` from `0.5` to `0.6` in dev-dependencies.
 
 ### Deprecated
 
