@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
---
+- Windows support: use Ninja generator with MSVC compilers (`cl.exe`) on Windows; disable Fortran detection via cmake sentinel value; disable Eigen BLAS/LAPACK optional components to prevent GFortran auto-detection; handle `lib/Release/` output path on Windows.
 
 ### Changed
 
