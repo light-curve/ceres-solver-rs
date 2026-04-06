@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
---
+- Windows support: vcpkg integration for system-installed Ceres on Windows (reads `VCPKG_ROOT` + `VCPKGRS_TRIPLET`); fallback to `CERES_INCLUDE_DIR`, `EIGEN3_INCLUDE_DIR`, `CERES_LIB_DIR` environment variables.
 
 ### Changed
 
@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
--
+- Windows build: link `shlwapi` (required by glog), define `GLOG_NO_ABBREVIATED_SEVERITIES` to avoid conflicts with `<windows.h>` macros, use `/std:c++17` for MSVC, and add `eigen3` sub-directory to include paths for vcpkg layout.
 
 ### Security
 

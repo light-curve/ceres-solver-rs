@@ -27,6 +27,7 @@ features = ["c++17"]
 [build-dependencies]
 cxx-build = "1"
 pkg-config = { version = "0.3", optional = true }
+vcpkg = "0.2"
 
 [dev-dependencies]
 approx = "0.5"
