@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Bump `rand` from `0.9` to `0.10`, `rand_chacha` from `0.9` to `0.10`, and `rand_distr` from `0.5` to `0.6` in dev-dependencies.
+--
 
 ### Deprecated
 
@@ -30,6 +30,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 --
+
+## [0.5.1] 2026-04-06
+
+### Added
+
+- Windows support via `ceres-solver-sys` 0.5.3.
+
+### Changed
+
+- Bump `ceres-solver-sys` from `0.5.0` to `0.5.3`.
+- Bump `rand` from `0.9` to `0.10`, `rand_chacha` from `0.9` to `0.10`, and `rand_distr` from `0.5` to `0.6` in dev-dependencies.
 
 ## [0.5.0] 2025-12-13
 

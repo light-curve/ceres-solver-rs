@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Windows support: use Ninja generator with MSVC compilers (`cl.exe`) on Windows; disable Fortran detection via cmake sentinel value; disable Eigen BLAS/LAPACK optional components to prevent GFortran auto-detection; handle `lib/Release/` output path on Windows.
+--
 
 ### Changed
 
@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 --
+
+## [0.5.1+ceres2.2.0-eigen3.4.0-glog0.7.1] 2026-04-06
+
+### Added
+
+- Windows support: use Ninja generator with MSVC compilers (`cl.exe`) on Windows; disable Fortran detection via cmake sentinel value; disable Eigen BLAS/LAPACK optional components to prevent GFortran auto-detection; handle `lib/Release/` output path on Windows.
 
 ## [0.5.0+ceres2.2.0-eigen3.4.0-glog0.7.1] 2025-12-13
 
