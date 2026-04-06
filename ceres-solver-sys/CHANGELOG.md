@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 --
 
+## [0.5.2] 2026-02-10
+
+### Fixed
+
+- Define `GLOG_USE_GLOG_EXPORT` unconditionally (not only for the `source` feature) to fix builds against newer system glog installations.
+
 ## [0.5.1] 2025-12-13
 
 ### Fixed
