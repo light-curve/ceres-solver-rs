@@ -4,12 +4,10 @@ on: [ push, pull_request ]
 
 jobs:
   cargo-fmt:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - uses: actions/checkout@v7
-        with:
-          submodules: true
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
