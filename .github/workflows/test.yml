@@ -8,8 +8,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: stable
           components: rustfmt
       - name: Run cargo fmt
         run: cargo +stable fmt --all --check
